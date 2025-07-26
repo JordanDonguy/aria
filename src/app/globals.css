@@ -1,26 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-color: #F3F3F3;
+  --text-color: #0F0F0F;
+  --menu-color: #D0D0D0;
+  --menu-shadow: #9d9d9d;
+  --input-color: #D0D0D0;
+  --input-shadow: #9d9d9d;
+  --chat-msg-color: #D0D0D0;
+  --input-text-color: #464646;
+  --timestamp-color: #939393;
+  --code-color: rgb(214, 211, 221);
+  --user-button-color: rgb(180, 180, 180);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --bg-color: #141414;
+  --text-color: #e0e0e0;
+  --menu-color: #1E1E1E;
+  --menu-shadow: #0c0c0c;
+  --input-color: #272727;
+  --input-shadow: transparent;
+  --chat-msg-color: #474747;
+  --input-text-color: #ABAAAA;
+  --timestamp-color: #ABAAAA;
+  --code-color: #2c2a30;
+  --user-button-color: rgb(79, 79, 79);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  overflow-y: scroll;
+  font-family: "Open Sans", sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
 }
