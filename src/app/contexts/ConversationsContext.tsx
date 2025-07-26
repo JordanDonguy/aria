@@ -4,7 +4,6 @@
 import { createContext, useState, useContext, ReactNode } from "react";
 
 interface Message {
-  id: string;
   role: "user" | "assistant";
   content: string;
 }
@@ -18,11 +17,12 @@ interface ConversationsContextType {
   conversations: Conversation[];
   addConversation: (title: string) => void;
   removeConversation: (id: string) => void;
+  conversationId: string;
+  setConversationId: React.Dispatch<React.SetStateAction<string>>;
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   addMessage: (role: "user" | "assistant", content: string) => void;
-  conversationId: string;
-  setConversationId: React.Dispatch<React.SetStateAction<string>>;
+  updateLastMessage: (content: string) => void;
 }
 
 const ConversationsContext = createContext<ConversationsContextType | undefined>(undefined);
@@ -46,11 +46,22 @@ export const ConversationsProvider = ({ children }: { children: ReactNode }) => 
 
   const addMessage = (role: "user" | "assistant", content: string) => {
     const newMessage: Message = {
-      id: crypto.randomUUID(),
       role,
       content,
     };
     setMessages((prev) => [...prev, newMessage])
+  };
+
+  const updateLastMessage = (content: string) => {
+    setMessages((prev) => {
+      if (prev.length === 0) return prev;
+      const updated = [...prev];
+      updated[updated.length - 1] = {
+        ...updated[updated.length - 1],
+        content,
+      };
+      return updated;
+    });
   };
 
   return (
@@ -64,7 +75,8 @@ export const ConversationsProvider = ({ children }: { children: ReactNode }) => 
         setConversationId,
         messages,
         setMessages,
-        addMessage
+        addMessage,
+        updateLastMessage
       }}>
       {children}
     </ConversationsContext.Provider>
