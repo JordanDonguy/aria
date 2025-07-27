@@ -14,18 +14,20 @@
   --user-button-color: rgb(180, 180, 180);
 }
 
-.dark {
-  --bg-color: #141414;
-  --text-color: #e0e0e0;
-  --menu-color: #1E1E1E;
-  --menu-shadow: #0c0c0c;
-  --input-color: #272727;
-  --input-shadow: transparent;
-  --chat-msg-color: #474747;
-  --input-text-color: #ABAAAA;
-  --timestamp-color: #ABAAAA;
-  --code-color: #2c2a30;
-  --user-button-color: rgb(79, 79, 79);
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg-color: #141414;
+    --text-color: #e0e0e0;
+    --menu-color: #1E1E1E;
+    --menu-shadow: #0c0c0c;
+    --input-color: #272727;
+    --input-shadow: transparent;
+    --chat-msg-color: #474747;
+    --input-text-color: #ABAAAA;
+    --timestamp-color: #ABAAAA;
+    --code-color: #2c2a30;
+    --user-button-color: rgb(79, 79, 79);
+  }
 }
 
 html {
@@ -36,4 +38,42 @@ html {
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
+}
+
+ul,
+ol {
+  list-style-position: inside;
+}
+
+li {
+  text-indent: -1.2rem;
+  padding-left: 1.2rem;
+  list-style-type: disc;
+}
+
+input:focus {
+  outline: none;
+}
+
+li p {
+  display: inline;
+}
+
+pre {
+  padding: 1rem;
+  background: var(--code-color);
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-sizing: border-box;
+  width: 95%;
+  margin: 1rem auto;
+}
+
+pre>code {
+  display: block;
+  box-sizing: border-box;
+  padding: 0px 1rem;
+  font-size: .9rem;
 }

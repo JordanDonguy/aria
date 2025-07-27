@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { CircleArrowUp } from "lucide-react";
 import { useConversations } from "@/app/contexts/ConversationsContext";
 import { decodeStream } from "@/lib/utils/decodeStram";
@@ -20,8 +19,8 @@ function UserInput() {
     // Add an empty assistant message as a placeholder
     addMessage("assistant", "");
 
-    // Define an updatedMessages array to send the messages array along with the new user message to Mistral AI
-    const updatedMessages = [...messages, {role: "user", content: input}];
+    // Updated messages including the new user input
+    const updatedMessages = [...messages, { role: "user", content: input }];
 
     setInput("");
 
@@ -34,11 +33,10 @@ function UserInput() {
 
       if (!res.body) {
         throw new Error("No response body");
-      };
+      }
 
-      // Decode streamed response and updates bot message's content in messages
+      // Decode streamed response and update last message
       await decodeStream(res, updateLastMessage);
-
     } catch (error) {
       console.error("Error calling Mistral API:", error);
     }
@@ -48,7 +46,7 @@ function UserInput() {
     <form
       onSubmit={handleSubmit}
       className="
-        fixed bottom-[2vh] w-[calc(100%-1rem)] md:w-full max-w-xl
+        fixed bottom-[2vh] w-[calc(100%-1rem)] md:w-full max-w-2xl
         rounded-4xl bg-[var(--input-color)]
         shadow-sm text-lg
         transition-[margin] duration-500 ease-in-out"
@@ -74,7 +72,7 @@ function UserInput() {
         </button>
       </fieldset>
     </form>
-  )
+  );
 }
 
-export default UserInput
+export default UserInput;
