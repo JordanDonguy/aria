@@ -43,12 +43,14 @@ body {
 ul,
 ol {
   list-style-position: inside;
+  margin: 1rem 0px;
 }
 
 li {
   text-indent: -1.2rem;
   padding-left: 1.2rem;
   list-style-type: disc;
+  margin: .5rem 0px;
 }
 
 input:focus {
@@ -76,4 +78,8 @@ pre>code {
   box-sizing: border-box;
   padding: 0px 1rem;
   font-size: .9rem;
+}
+
+article p {
+  margin: .25rem 0px;
 }

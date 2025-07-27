@@ -59,6 +59,8 @@ function UserInput() {
           placeholder="Ask anything..."
           onChange={(e) => setInput(e.target.value)}
           className="w-full text-[var(--text-color)] bg-transparent outline-none"
+          autoComplete="off"
+          maxLength={1000}
         />
         <button
           type="submit"
