@@ -14,35 +14,38 @@ function UserInput() {
     e.preventDefault();
     if (!input.trim()) return;
 
+    // Save form input in a variable and reset before reseting it
+    const currentInput = input;
+    setInput("");
+
     // Add the user message first
-    addMessage("user", input);
+    addMessage("user", currentInput);
 
     // Add an empty assistant message as a placeholder
     addMessage("assistant", "");
 
     // Updated messages including the new user input
-    const updatedMessages = [...messages, { role: "user", content: input }];
+    const updatedMessages = [...messages, { role: "user", content: currentInput }];
 
-    // Ask conversation title to Mistral if new conversation
-    if (messages.length < 2) {
-      document.title = await askConversationTitle(input);
-    };
-
-    setInput("");
-
+    
     try {
       const res = await fetch("/api/mistral/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: updatedMessages }),
       });
-
+      
       if (!res.body) {
         throw new Error("No response body");
       }
-
+      
       // Decode streamed response and update last message
       await decodeStream(res, updateLastMessage);
+
+      // Ask conversation title to Mistral if new conversation
+      if (messages.length < 2) {
+        document.title = await askConversationTitle(currentInput);
+      };
     } catch (error) {
       console.error("Error calling Mistral API:", error);
     }

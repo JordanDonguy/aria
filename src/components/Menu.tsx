@@ -15,7 +15,10 @@ function Menu() {
   function newChat() {
     setMessages([]);
     document.title = "Aria";
-  }
+    if (window.innerWidth < 768) {
+      setShowMenu(false)
+    }
+  };
 
   return (
     <header
