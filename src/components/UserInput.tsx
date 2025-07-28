@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { CircleArrowUp } from "lucide-react";
 import { useConversations } from "@/app/contexts/ConversationsContext";
 import { decodeStream } from "@/lib/utils/decodeStram";
+import { askConversationTitle } from "@/lib/utils/askConversationTitle";
 
 function UserInput() {
   const { messages, addMessage, updateLastMessage } = useConversations();
@@ -22,10 +23,15 @@ function UserInput() {
     // Updated messages including the new user input
     const updatedMessages = [...messages, { role: "user", content: input }];
 
+    // Ask conversation title to Mistral if new conversation
+    if (messages.length < 2) {
+      document.title = await askConversationTitle(input);
+    };
+
     setInput("");
 
     try {
-      const res = await fetch("/api/mistral", {
+      const res = await fetch("/api/mistral/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: updatedMessages }),

@@ -83,3 +83,7 @@ pre>code {
 article p {
   margin: .25rem 0px;
 }
+
+.header-transition {
+  transition: width 500ms, padding 500ms;
+}

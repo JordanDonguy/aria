@@ -1,7 +1,7 @@
 function LoadingAnimation() {
   return (
     <>
-      <div className="flex justify-center items-end gap-3 self-start min-h-[60vh]">
+      <div className="flex justify-center gap-3 self-start min-h-[60vh]">
         <span className="dot" />
         <span className="dot delay-150" />
         <span className="dot delay-300" />

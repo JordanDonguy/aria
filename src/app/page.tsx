@@ -1,5 +1,6 @@
 "use client"
 
+import Menu from "@/components/Menu";
 import UserInput from "@/components/UserInput";
 import UserMessage from "@/components/UserMessage";
 import AssistantMessage from "@/components/AssistantMessage";
@@ -11,6 +12,7 @@ export default function Home() {
 
   return (
     <div className="flex justify-center min-h-[85vh] w-full px-2 md:px-0">
+      <Menu />
       {/* Render either a welcome message, or chat messages */}
 
       {messages.length < 2 ? (
