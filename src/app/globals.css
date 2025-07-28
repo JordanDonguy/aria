@@ -85,5 +85,5 @@ article p {
 }
 
 .header-transition {
-  transition: width 500ms, padding 500ms;
+  transition: width 500ms ease, height 500ms ease, padding 500ms;
 }

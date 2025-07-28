@@ -27,7 +27,7 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "mistral-small-latest",
+        model: "mistral-medium",
         messages: [
           {
             role: "system",

@@ -54,7 +54,7 @@ function UserInput() {
       className="
         fixed bottom-[2vh] w-[calc(100%-1rem)] md:w-full max-w-2xl
         rounded-4xl bg-[var(--input-color)]
-        shadow-sm text-lg
+        shadow-sm text-lg md:ml-20 ml-0 lg:ml-0
         transition-[margin] duration-500 ease-in-out"
     >
       <fieldset className="flex justify-between p-4 w-full ">
@@ -64,7 +64,7 @@ function UserInput() {
           value={input}
           placeholder="Ask anything..."
           onChange={(e) => setInput(e.target.value)}
-          className="w-full text-[var(--text-color)] bg-transparent outline-none"
+          className="w-full text-[var(--text-color)] bg-transparent outline-none px-2"
           autoComplete="off"
           maxLength={1000}
         />
