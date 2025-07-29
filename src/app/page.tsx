@@ -20,10 +20,8 @@ export default function Home() {
 
   return (
     <div className="flex justify-center min-h-[85vh] w-full px-2 md:px-0">
-      <Menu />
-      <div className="fixed md:left-20 top-0 md:py-[22px] z-30 pt-[18px] md:z-10 md:w-full md:bg-[var(--bg-color)] lg:bg-transparent">
-        <TitleLogo />
-      </div>
+
+
 
       {/* Render either a welcome message, or chat messages */}
       {messages.length < 2 ? (

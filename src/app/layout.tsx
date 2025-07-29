@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Open_Sans } from "next/font/google";
 import "./globals.css";
 import AppProviders from "./providers/AppProviders";
+import Menu from "@/components/Menu";
+import TitleLogo from "@/components/TitleLogo";
 
 const OpenSans = Open_Sans({
   variable: "--font-open-sans",
@@ -23,9 +25,19 @@ export default function RootLayout({
       <body
         className={`${OpenSans.variable} antialiased`}
       >
-          <AppProviders>
-            {children}
-          </AppProviders>
+
+        <AppProviders>
+
+          <Menu />
+
+          <div className="fixed left-20 top-0 py-[22px] z-10 w-full md:bg-[var(--bg-color)] lg:bg-transparent hidden md:block">
+            <TitleLogo />
+          </div>
+
+          {children}
+
+        </AppProviders>
+
       </body>
     </html>
   );

@@ -3,6 +3,7 @@
 import { ReactNode } from 'react';
 import { ConversationsProvider } from "../contexts/ConversationsContext";
 import { ThemeProvider } from "next-themes";
+import { SessionProvider } from "next-auth/react";
 
 export default function AppProviders({ children }: { children: ReactNode }) {
   return (
@@ -11,9 +12,11 @@ export default function AppProviders({ children }: { children: ReactNode }) {
       defaultTheme="system"     /* follow OS by default */
       enableSystem              /* let users return to “system” */
     >
-      <ConversationsProvider>
-        {children}
-      </ConversationsProvider>
+      <SessionProvider>
+        <ConversationsProvider>
+          {children}
+        </ConversationsProvider>
+      </SessionProvider>
     </ThemeProvider>
   )
 }
