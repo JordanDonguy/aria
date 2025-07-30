@@ -4,7 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
 import { createClient } from "@supabase/supabase-js";
 import { NextAuthOptions } from "next-auth";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../supabase";
 
 const authConfig: NextAuthOptions = {
   // Configure authentication providers
@@ -97,10 +97,18 @@ const authConfig: NextAuthOptions = {
     },
 
     // Customize session object returned to client
-    async session({ session, token }) {
-      // Attach user ID from token to session.user object for easier access client-side
-      if (session.user && token.sub) {
-        session.user.id = token.sub as string;
+      async session({ session }) {
+      if (session.user?.email) {
+        // Fetch the custom user ID from Supabase using the email
+        const { data, error } = await supabase
+          .from("users")
+          .select("id")
+          .eq("email", session.user.email)
+          .single();
+
+        if (!error && data) {
+          session.user.id = data.id;
+        }
       }
       return session;
     },

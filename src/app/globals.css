@@ -9,7 +9,7 @@
   --input-shadow: #9d9d9d;
   --chat-msg-color: #D0D0D0;
   --input-text-color: #464646;
-  --timestamp-color: #939393;
+  --hover-color: #aeaeae;
   --code-color: rgb(214, 211, 221);
   --user-button-color: rgb(206, 206, 206);
 }
@@ -24,7 +24,7 @@
     --input-shadow: transparent;
     --chat-msg-color: #474747;
     --input-text-color: #ABAAAA;
-    --timestamp-color: #ABAAAA;
+    --hover-color: #494949;
     --code-color: #2c2a30;
     --user-button-color: rgb(34, 34, 34);
   }
@@ -86,4 +86,8 @@ article p {
 
 .header-transition {
   transition: width 500ms ease, height 500ms ease, padding 500ms;
+}
+
+.text-transition {
+  transition: width 0ms, opacity 400ms ease, scale 400ms ease, margin 400ms ease;
 }

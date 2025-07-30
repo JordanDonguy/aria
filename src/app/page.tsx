@@ -1,22 +1,31 @@
 "use client"
 
 import { useEffect } from "react";
-import Menu from "@/components/Menu";
 import UserInput from "@/components/UserInput";
 import UserMessage from "@/components/UserMessage";
 import AssistantMessage from "@/components/AssistantMessage";
 import { useConversations } from "./contexts/ConversationsContext";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import scrollDown from "@/lib/utils/scrollDown";
-import TitleLogo from "@/components/TitleLogo";
 
 export default function Home() {
-  const { messages } = useConversations();
+  const { messages, conversationId, conversations } = useConversations();
 
   useEffect(() => {
     // Scroll down to better display the upcoming assistant message
     scrollDown();
-  }, [messages.length])
+  }, [messages.length]);
+
+  useEffect(() => {
+    if (conversationId && conversations.length) {
+      const currentConversation = conversations.find(
+        conversation => conversation.id === conversationId
+      );
+      if (currentConversation) {
+        document.title = currentConversation.title;
+      }
+    }
+  }, [])
 
   return (
     <div className="flex justify-center min-h-[85vh] w-full px-2 md:px-0">

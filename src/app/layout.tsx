@@ -30,7 +30,7 @@ export default function RootLayout({
 
           <Menu />
 
-          <div className="fixed left-20 top-0 py-[22px] z-10 w-full md:bg-[var(--bg-color)] lg:bg-transparent hidden md:block">
+          <div className="fixed left-20 top-0 py-[22px] z-10 w-full lg:w-fit md:bg-[var(--bg-color)] lg:bg-transparent hidden md:block">
             <TitleLogo />
           </div>
 

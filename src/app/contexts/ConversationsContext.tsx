@@ -15,7 +15,8 @@ interface Conversation {
 
 interface ConversationsContextType {
   conversations: Conversation[];
-  addConversation: (title: string) => void;
+  setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>;
+  addConversation: (id:string, title: string) => void;
   removeConversation: (id: string) => void;
   conversationId: string;
   setConversationId: React.Dispatch<React.SetStateAction<string>>;
@@ -32,12 +33,12 @@ export const ConversationsProvider = ({ children }: { children: ReactNode }) => 
   const [conversationId, setConversationId] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
 
-  const addConversation = (title: string) => {
+  const addConversation = (id: string, title: string) => {
     const newConversation: Conversation = {
-      id: crypto.randomUUID(),
+      id,
       title,
     };
-    setConversations((prev) => [...prev, newConversation]);
+    setConversations((prev) => [newConversation, ...prev]);
   };
 
   const removeConversation = (id: string) => {
@@ -69,6 +70,7 @@ export const ConversationsProvider = ({ children }: { children: ReactNode }) => 
       value=
       {{
         conversations,
+        setConversations,
         addConversation,
         removeConversation,
         conversationId,

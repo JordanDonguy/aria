@@ -1,7 +1,7 @@
 export async function decodeStream(
   response: Response,
   updateLastMessage: (content: string) => void,
-): Promise<void> {
+): Promise<string> {
   // Initialize reader (for streamed response)
   const reader = response.body?.getReader();
   if (!reader) throw new Error("Response body is empty or not readable");
@@ -48,5 +48,5 @@ export async function decodeStream(
         updateLastMessage(assistantContent);
       }
     }
-  }
+  }; return assistantContent;
 }

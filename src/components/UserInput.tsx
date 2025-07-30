@@ -7,7 +7,7 @@ import { decodeStream } from "@/lib/utils/decodeStram";
 import { askConversationTitle } from "@/lib/utils/askConversationTitle";
 
 function UserInput() {
-  const { messages, addMessage, updateLastMessage } = useConversations();
+  const { messages, addMessage, updateLastMessage, conversationId, setConversationId, addConversation } = useConversations();
   const [input, setInput] = useState<string>("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -15,37 +15,96 @@ function UserInput() {
     if (!input.trim()) return;
 
     // Save form input in a variable and reset before reseting it
-    const currentInput = input;
+    const userContent = input;
     setInput("");
 
     // Add the user message first
-    addMessage("user", currentInput);
+    addMessage("user", userContent);
 
     // Add an empty assistant message as a placeholder
     addMessage("assistant", "");
 
     // Updated messages including the new user input
-    const updatedMessages = [...messages, { role: "user", content: currentInput }];
+    const updatedMessages = [...messages, { role: "user", content: userContent }];
 
-    
+
     try {
       const res = await fetch("/api/mistral/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: updatedMessages }),
       });
-      
+
       if (!res.body) {
         throw new Error("No response body");
       }
-      
+
       // Decode streamed response and update last message
-      await decodeStream(res, updateLastMessage);
+      const assistantContent = await decodeStream(res, updateLastMessage);
 
       // Ask conversation title to Mistral if new conversation
       if (messages.length < 2) {
-        document.title = await askConversationTitle(currentInput);
-      };
+        document.title = await askConversationTitle(userContent);
+
+        const res = await fetch("/api/conversations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: document.title,
+          }),
+        });
+
+        const data = await res.json();
+
+        await addConversation(data.id, data.title);   // Add new conversation to conversations list
+        setConversationId(data.id);                   // update state for future renders
+
+        // Use a local variable to avoid race condition
+        const newConversationId = data.id;
+
+        // Post both messages with newConversationId
+        await fetch("/api/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            conversation_id: newConversationId,
+            role: "user",
+            content: userContent,
+          }),
+        });
+
+        await fetch("/api/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            conversation_id: newConversationId,
+            role: "assistant",
+            content: assistantContent,
+          }),
+        });
+      } else {
+        // conversationId is assumed to already exist
+        await fetch("/api/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            conversation_id: conversationId,
+            role: "user",
+            content: userContent,
+          }),
+        });
+
+        await fetch("/api/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            conversation_id: conversationId,
+            role: "assistant",
+            content: assistantContent,
+          }),
+        });
+      }
+
     } catch (error) {
       console.error("Error calling Mistral API:", error);
     }
