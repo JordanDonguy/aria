@@ -25,12 +25,10 @@ export default function Home() {
         document.title = currentConversation.title;
       }
     }
-  }, [])
+  }, [conversationId])
 
   return (
     <div className="flex justify-center min-h-[85vh] w-full px-2 md:px-0">
-
-
 
       {/* Render either a welcome message, or chat messages */}
       {messages.length < 2 ? (
@@ -62,5 +60,5 @@ export default function Home() {
       )}
       <UserInput />
     </div>
-  );
-}
+  )
+};

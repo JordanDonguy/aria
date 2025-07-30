@@ -57,3 +57,32 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(data, { status: 201 });
 }
+
+// --------------- DELETE a conversation by ID ---------------
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authConfig);
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const userId = session.user.id;
+  const { searchParams } = new URL(req.url);
+  const conversationId = searchParams.get("id");
+
+  if (!conversationId || typeof conversationId !== "string") {
+    return NextResponse.json({ error: "Missing or invalid conversation ID" }, { status: 400 });
+  }
+
+  const { error } = await supabase
+    .from("conversations")
+    .delete()
+    .eq("id", conversationId)
+    .eq("user_id", userId); // ensure only user's own conversations can be deleted
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ message: "Conversation deleted" }, { status: 200 });
+}

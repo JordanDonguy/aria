@@ -9,6 +9,7 @@ import { useTheme } from "next-themes";
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import scrollDown from "@/lib/utils/scrollDown";
 import Link from 'next/link';
 
 function Menu() {
@@ -18,7 +19,7 @@ function Menu() {
   const [displayElement, setDisplayElement] = useState<boolean>(false)  // To display or not element (opacity, scale, etc...)
 
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { setMessages, conversations, setConversations } = useConversations();
+  const { setMessages, conversations, setConversations, conversationId, setConversationId } = useConversations();
 
   const { data: session, status } = useSession();
   const isLoggedIn = status === "authenticated";
@@ -31,10 +32,48 @@ function Menu() {
   // If user clicks on new chat, reset messages and document.title
   function newChat() {
     setMessages([]);
-    document.title = "Aria";
+    setConversationId("");
     router.push("/");
     if (window.innerWidth < 768) {
       setShowMenu(false)
+    }
+  };
+
+  // Fetch messages of a conversation when clicking on the conversation's button
+  async function fetchMessages(conversation_id: string) {
+    try {
+      setConversationId(conversation_id);     // Update conversationId (and automatically document.title)
+      // If on mobile, close menu
+      if (window.innerWidth < 768) {
+        setShowMenu(false)
+      };
+      const res = await fetch(`/api/messages?conversation_id=${conversation_id}`);
+      const data = await res.json();
+      setMessages(data);
+      setTimeout(() => scrollDown(), 50);     // Scroll down after a very short delay to make sure UI's rendered
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  // delete a conversation if clicking delete button
+  async function deleteConversation(conversation_id: string) {
+    try {
+      // If deleting current conversation, reset messages and conversationId
+      if (conversation_id === conversationId) {
+        setMessages([]);
+        setConversationId("");
+      };
+      // Remove conversation from conversations list
+      setConversations((prev) =>
+        prev.filter((conversation) => conversation.id !== conversation_id)
+      );
+      // Delete conversation in db
+      await fetch(`/api/conversations?id=${conversation_id}`, {
+        method: "DELETE"
+      });
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
     }
   };
 
@@ -211,36 +250,38 @@ function Menu() {
 
       {/* Conversations section */}
 
-      <h2 className={`duration-400 ease text-start w-36 text-2xl my-4 md:origin-left
+      <h2 className={`duration-400 ease text-start text-2xl pt-4 pb-2 w-full md:origin-left
           ${hideElement ? "hidden " : ""} 
           ${displayElement ? "opacity-100" : "opacity-0 md:scale-x-0"}`}
       >
         Conversations:
       </h2>
 
-      {conversations.map(conversation => (
-        <div className={`w-full relative duration-400 ease 
-          ${hideElement ? "hidden " : ""} 
-          ${displayElement ? "opacity-100" : "opacity-0"}`}
-        >
-
-          {/* Conversation select buttons */}
-          <button
-            className="bg-[var(--bg-color)] px-4 py-4 rounded-xl duration-100 w-full mb-2 
-            text-left whitespace-nowrap overflow-hidden text-ellipsis hover:cursor-pointer hover:bg-[var(--hover-color)]"
+      <div className="w-full flex flex-col gap-4 max-h-fit overflow-y-scroll scrollbar-hide mb-4">
+        {conversations.map(conversation => (
+          <div className={`w-full relative ease origin-top
+            ${hideElement ? "hidden " : ""}
+            ${displayElement ? "opacity-100 scale-y-100 duration-400 " : "opacity-0 scale-y-0 md:scale-y-100 duration-200 md:duration-400"}`}
           >
-            {conversation.title}
-          </button>
-
-          {/* Conversation delete button */}
-          <button
-            className="text-[var(--text-color)] rounded-full absolute right-[6px] top-[6px] duration-150 hover:cursor-pointer hover:scale-115 active:scale-90"
-          >
-            <CircleX />
-          </button>
-
-        </div>
-      ))}
+            {/* Conversation select buttons */}
+            <button
+              onClick={() => fetchMessages(conversation.id)}
+              className={`${conversation.id === conversationId ? "bg-[var(--hover-color)]" : "bg-[var(--bg-color)]"} px-4 py-4 rounded-xl duration-100 
+              w-full text-left whitespace-nowrap overflow-hidden text-ellipsis 
+              hover:cursor-pointer hover:bg-[var(--hover-color)]`}
+            >
+              {conversation.title}
+            </button>
+            {/* Conversation delete button */}
+            <button
+              onClick={() => deleteConversation(conversation.id)}
+              className="text-[var(--text-color)] rounded-full absolute right-[6px] top-[6px] duration-150 hover:cursor-pointer hover:scale-115 active:scale-90"
+            >
+              <CircleX />
+            </button>
+          </div>
+        ))}
+      </div>
     </header>
   )
 }

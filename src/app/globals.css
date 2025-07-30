@@ -88,6 +88,11 @@ article p {
   transition: width 500ms ease, height 500ms ease, padding 500ms;
 }
 
-.text-transition {
-  transition: width 0ms, opacity 400ms ease, scale 400ms ease, margin 400ms ease;
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
