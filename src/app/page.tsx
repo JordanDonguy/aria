@@ -9,7 +9,7 @@ import LoadingAnimation from "@/components/LoadingAnimation";
 import scrollDown from "@/lib/utils/scrollDown";
 
 export default function Home() {
-  const { messages, conversationId, conversations } = useConversations();
+  const { messages, conversationId, conversations, error } = useConversations();
 
   useEffect(() => {
     // Scroll down to better display the upcoming assistant message
@@ -30,8 +30,10 @@ export default function Home() {
   return (
     <div className="flex justify-center min-h-[85vh] w-full px-2 md:px-0">
 
-      {/* Render either a welcome message, or chat messages */}
-      {messages.length < 2 ? (
+      {/* Render either error message, welcome message, or chat messages */}
+      {error ? (
+        <p className="text-2xl text-center w-full self-center">{error}</p>
+      ) : messages.length < 2 ? (
         <p className="text-3xl/16 text-center self-center mt-12 md:mt-0"> Hi, I'm Aria 👋,<br /> Ask me anything 🙂</p>
 
       ) : (
@@ -39,18 +41,18 @@ export default function Home() {
 
           {messages.map((message, index) => {
             if (message.role === "user") {
-              return <UserMessage key={index} content={message.content} />;
+              return <UserMessage key={`${message.role}-${index}`} content={message.content} />;
 
             } else if (message.role === "assistant") {
               // If this is the last message and content is empty, render loading animation instead
               if (index === messages.length - 1 && message.content.trim() === "") {
                 return (
-                  <LoadingAnimation />
+                  <LoadingAnimation key={index} />
                 );
 
               } else {
                 const isLast = index === messages.length - 1;
-                return <AssistantMessage key={index} content={message.content} isLast={isLast} />;
+                return <AssistantMessage key={`${message.role}-${index}`} content={message.content} isLast={isLast} />;
               }
             } else {
               return null;

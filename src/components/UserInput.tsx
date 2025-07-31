@@ -7,7 +7,16 @@ import { decodeStream } from "@/lib/utils/decodeStram";
 import { askConversationTitle } from "@/lib/utils/askConversationTitle";
 
 function UserInput() {
-  const { messages, addMessage, updateLastMessage, conversationId, setConversationId, addConversation } = useConversations();
+  const { 
+    messages,
+    setMessages,
+    addMessage,
+    updateLastMessage,
+    conversationId,
+    setConversationId,
+    addConversation,
+    setError
+  } = useConversations();
   const [input, setInput] = useState<string>("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -34,6 +43,14 @@ function UserInput() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: updatedMessages }),
       });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        // Remove last two messages from state and throw error
+        setMessages((prevMessages) => prevMessages.slice(0, -2));
+        if (errorData?.error) throw new Error(errorData.error);
+        else throw new Error(`HTTP error! status: ${res.status}`);
+      }
 
       if (!res.body) {
         throw new Error("No response body");
@@ -107,6 +124,11 @@ function UserInput() {
 
     } catch (error) {
       console.error("Error calling Mistral API:", error);
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Unknown error occurred");
+      }
     }
   }
 

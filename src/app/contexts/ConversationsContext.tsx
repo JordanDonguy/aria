@@ -1,6 +1,7 @@
 // app/contexts/ConversationsContext.tsx
 "use client";
 
+import { useEffect } from "react";
 import { createContext, useState, useContext, ReactNode } from "react";
 
 interface Message {
@@ -16,7 +17,7 @@ interface Conversation {
 interface ConversationsContextType {
   conversations: Conversation[];
   setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>;
-  addConversation: (id:string, title: string) => void;
+  addConversation: (id: string, title: string) => void;
   removeConversation: (id: string) => void;
   conversationId: string;
   setConversationId: React.Dispatch<React.SetStateAction<string>>;
@@ -24,6 +25,8 @@ interface ConversationsContextType {
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   addMessage: (role: "user" | "assistant", content: string) => void;
   updateLastMessage: (content: string) => void;
+  error: string | null;
+  setError: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const ConversationsContext = createContext<ConversationsContextType | undefined>(undefined);
@@ -32,6 +35,7 @@ export const ConversationsProvider = ({ children }: { children: ReactNode }) => 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [conversationId, setConversationId] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const addConversation = (id: string, title: string) => {
     const newConversation: Conversation = {
@@ -65,6 +69,14 @@ export const ConversationsProvider = ({ children }: { children: ReactNode }) => 
     });
   };
 
+  useEffect(() => {
+    if (!error) return;
+    const timeout = setTimeout(() => {
+      setError(null);
+    }, 60000);
+    return () => clearTimeout(timeout);
+  }, [error])
+
   return (
     <ConversationsContext.Provider
       value=
@@ -78,7 +90,9 @@ export const ConversationsProvider = ({ children }: { children: ReactNode }) => 
         messages,
         setMessages,
         addMessage,
-        updateLastMessage
+        updateLastMessage,
+        error,
+        setError
       }}>
       {children}
     </ConversationsContext.Provider>

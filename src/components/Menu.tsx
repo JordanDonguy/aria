@@ -19,7 +19,7 @@ function Menu() {
   const [displayElement, setDisplayElement] = useState<boolean>(false)  // To display or not element (opacity, scale, etc...)
 
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { setMessages, conversations, setConversations, conversationId, setConversationId } = useConversations();
+  const { setMessages, conversations, setConversations, conversationId, setConversationId, setError } = useConversations();
 
   const { data: session, status } = useSession();
   const isLoggedIn = status === "authenticated";
@@ -48,6 +48,17 @@ function Menu() {
         setShowMenu(false)
       };
       const res = await fetch(`/api/messages?conversation_id=${conversation_id}`);
+
+      if (res.status === 429) {
+        setError("Too many requests... Please wait a minute 🙏");
+        return
+      };
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData?.error || "Failed to fetch messages");
+      }
+
       const data = await res.json();
       setMessages(data);
       setTimeout(() => scrollDown(), 50);     // Scroll down after a very short delay to make sure UI's rendered
@@ -69,9 +80,21 @@ function Menu() {
         prev.filter((conversation) => conversation.id !== conversation_id)
       );
       // Delete conversation in db
-      await fetch(`/api/conversations?id=${conversation_id}`, {
+      const res = await fetch(`/api/conversations?id=${conversation_id}`, {
         method: "DELETE"
       });
+
+      if (res.status === 429) {
+        setError("Too many requests... Please wait a minute 🙏");
+        return
+      };
+
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData?.error || "Failed to delete conversation");
+      }
+
     } catch (error) {
       console.error("Error deleting conversation:", error);
     }
@@ -107,11 +130,15 @@ function Menu() {
     const fetchConversations = async () => {
       const res = await fetch("/api/conversations");
       const data = await res.json();
-      console.log(conversations)
       if (res.ok) {
         setConversations(data);
       } else {
         console.error("Error:", data.error);
+        if (data.error instanceof Error) {
+          setError(data.error);
+        } else {
+          setError("Unknown error occurred");
+        }
       }
     };
     fetchConversations();
@@ -258,8 +285,10 @@ function Menu() {
       </h2>
 
       <div className="w-full flex flex-col gap-4 max-h-fit overflow-y-scroll scrollbar-hide mb-4">
-        {conversations.map(conversation => (
-          <div className={`w-full relative ease origin-top
+        {conversations.map((conversation, idx) => (
+          <div
+            key={idx}
+            className={`w-full relative ease origin-top
             ${hideElement ? "hidden " : ""}
             ${displayElement ? "opacity-100 scale-y-100 duration-400 " : "opacity-0 scale-y-0 md:scale-y-100 duration-200 md:duration-400"}`}
           >

@@ -3,7 +3,6 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Menu from "@/components/Menu";
 import Link from "next/link";
 
 export default function LoginPage() {

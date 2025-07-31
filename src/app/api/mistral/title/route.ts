@@ -1,8 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { rateLimiter, aiBuckets } from "@/lib/middlewares/rateLimit";
 
 const apiKey = process.env.MISTRAL_API_KEY;
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  // Apply rate limiter with AI bucket & limit 5 per minute
+  const rateLimitResponse = rateLimiter(req, {
+    bucketMap: aiBuckets,
+    limit: 5,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     if (!apiKey) {
       return NextResponse.json({ error: "API key not configured" }, { status: 500 });
