@@ -86,7 +86,7 @@ const authConfig: NextAuthOptions = {
           });
           if (error) return false;
         }
-        // If user exists but 'google' provider not listed, add it
+        // If user exists but 'google' provider not listed, return error message
         else if (!existingUser.providers.includes("google")) {
           throw new Error("An account with this email already exists. Please login with your password first, then link your Google account in profile settings.")
         };

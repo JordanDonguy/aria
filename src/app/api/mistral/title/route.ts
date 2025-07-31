@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter, aiBuckets } from "@/lib/middlewares/rateLimit";
+import { checkAndUpdateDailyLimit } from "@/lib/dailyLimit/checkUpdateDailyLimit";
 
 const apiKey = process.env.MISTRAL_API_KEY;
 
@@ -11,6 +12,24 @@ export async function POST(req: NextRequest) {
   });
   if (rateLimitResponse) return rateLimitResponse;
 
+  // Check if under daily limit and update it
+  const daily = await checkAndUpdateDailyLimit();
+  if (!daily.allowed) {
+    const retryAfter = daily.retryAfter ?? 3600; // fallback to 1 hour (in seconds)
+    const retryAfterHours = Number(Math.max(retryAfter / 3600, 1).toFixed(1)); // minimum 1 hour
+
+    return NextResponse.json(
+      { error: `"Daily usage limit reached. Please try again in ${retryAfterHours < 2 ? retryAfterHours + " hour" : retryAfterHours + " hours"} 🙏` },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': daily.retryAfter?.toString() || "1",
+        },
+      }
+    )
+  };
+
+  // Make API call
   try {
     if (!apiKey) {
       return NextResponse.json({ error: "API key not configured" }, { status: 500 });
