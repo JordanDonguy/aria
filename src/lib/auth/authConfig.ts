@@ -26,33 +26,33 @@ const authConfig: NextAuthOptions = {
         }
 
         // Fetch user by email from Supabase
-        const { data: users, error } = await supabase
+        const { data: user, error } = await supabase
           .from("users")
           .select("*")
           .eq("email", credentials.email)
           .single();
 
         // Throw error if user not found or error occurs
-        if (error || !users) throw new Error("User not found, please sign up");
+        if (error || !user) throw new Error("User not found, please sign up");
 
         // Check if user is a Google-only user (e.g. no hashed password)
-        if (!users.password) {
+        if (!user.password) {
           throw new Error("This account uses only Google login. Please sign in with Google.");
         }
 
         // Compare provided password with hashed password from DB
         const isValid = await bcrypt.compare(
           credentials.password,
-          users.password
+          user.password
         );
         // Throw error if password does not match
         if (!isValid) throw new Error("Password incorrect");
 
         // Return user object to create session (can include extra props here)
         return {
-          id: users.id,
-          email: users.email ?? undefined,
-          name: users.name ?? undefined,
+          id: user.id,
+          email: user.email ?? undefined,
+          name: user.name ?? undefined,
         };
       },
     }),
@@ -89,6 +89,7 @@ const authConfig: NextAuthOptions = {
             providers: ["Google"],
           });
           if (error) return false;
+          return true
         }
 
         // Block if account exists but user is not already signed in (to avoid hijacking)

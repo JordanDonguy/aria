@@ -7,9 +7,34 @@ import AssistantMessage from "@/components/AssistantMessage";
 import { useConversations } from "./contexts/ConversationsContext";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import scrollDown from "@/lib/utils/scrollDown";
+import { useSearchParams } from "next/navigation";
+import { toast } from "react-toastify";
 
 export default function Home() {
   const { messages, conversationId, conversations, error } = useConversations();
+
+  // Get login and delete params in url (to later display toast message or not)
+  const searchParams = useSearchParams();
+  const isLogin = searchParams.get('login');
+  const isDelete = searchParams.get('delete');
+
+  // If user just logged in or deleted his account, display a toast message
+  useEffect(() => {
+    // Function to remove query param from URL (cleanup)
+    const removeQueryParam = (param: string) => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete(param);
+      window.history.replaceState({}, '', url.toString());
+    };
+    // If user logged in (or deleted account) -> show toast message, then cleanup url
+    if (isLogin) {
+      toast.success("Logged in successfully")
+      removeQueryParam('login');
+    } else if (isDelete) {
+      toast.success("Account deleted")
+      removeQueryParam('delete');
+    }
+  }, [])
 
   useEffect(() => {
     // Scroll down to better display the upcoming assistant message

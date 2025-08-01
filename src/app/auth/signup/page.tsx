@@ -17,30 +17,40 @@ export default function LoginPage() {
 
   // Redirect user to /user if logged in and trying to access /auth/signup
   useEffect(() => {
-    if (status === "authenticated") return router.push("/user")
+    if (status === "authenticated") return router.push("/user");
   }, [status])
 
+  // Credentials sign up
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-
-    const res = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
+    // Sign up user in db
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
     });
-    console.log(res)
-    if (res?.error) {
-      setError(res.error);
-    } else {
-      router.push("/");
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setError(data.error);
+      return;
     }
+
+    // After successful sign-up, log in user immediately
+    await signIn('credentials', {
+      callbackUrl: "/?login=true",
+      email,
+      password
+    })
   };
 
+  // Google OAuth sign up
   const handleGoogleButton = async () => {
     try {
       await signIn("google", {
-        callbackUrl: "/",
+        callbackUrl: "/?login=true",
       });
     } catch (err) {
       console.error("Google sign-in failed:", err);
@@ -92,8 +102,8 @@ export default function LoginPage() {
           name="confirm-password"
           placeholder="********"
           className="border border-gray-400 p-4 w-full rounded "
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
         />
       </div>
 

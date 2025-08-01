@@ -1,17 +1,15 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed" });
-  }
-
-  const { email, password } = req.body;
+export async function POST(req: NextRequest) {
+  const { email, password } = await req.json();
 
   if (!email || !password) {
-    return res.status(400).json({ message: "Email and password are required" });
+    return NextResponse.json(
+      { message: "Email and password are required" },
+      { status: 400 }
+    );
   }
 
   // Check if user already exists
@@ -22,7 +20,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .single();
 
   if (existingUser) {
-    return res.status(409).json({ message: "User already exists" });
+    return NextResponse.json(
+      { message: "User already exists" },
+      { status: 409 }
+    );
   }
 
   // Hash password
@@ -32,12 +33,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { error: insertError } = await supabase.from("users").insert({
     email,
     password: hashedPassword,
-    providers: ["credentials"],
+    providers: ["Credentials"],
   });
 
   if (insertError) {
-    return res.status(500).json({ message: "Failed to create user" });
+    return NextResponse.json(
+      { message: "Failed to create user" },
+      { status: 500 }
+    );
   }
 
-  return res.status(201).json({ message: "User created successfully" });
+  return NextResponse.json(
+    { message: "User created successfully" },
+    { status: 201 }
+  );
 }

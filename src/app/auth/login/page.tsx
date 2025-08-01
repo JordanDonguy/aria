@@ -4,6 +4,8 @@ import { signIn } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
+import { toast } from "react-toastify";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -14,20 +16,35 @@ export default function LoginPage() {
 
   const { status } = useSession();
 
+  // Get logout params in url (to later display toast message or not)
+  const searchParams = useSearchParams();
+  const isLogout = searchParams.get('logout');
+
   // Redirect user to /user if logged in and trying to access /auth/login
   useEffect(() => {
     if (status === "authenticated") return router.push("/user")
   }, [status]);
 
+  // If user just logged out, display a toast message
+  useEffect(() => {
+    if (isLogout) {
+      toast.success("Logged out successfully")
+      // Remove query param from URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete('logout');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [])
+
+  // Credentials login
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const res = await signIn("credentials", {
-      redirect: false,
+      callbackUrl: "/?login=true",
       email,
       password,
     });
-    console.log(res)
     if (res?.error) {
       setError(res.error);
     } else {
@@ -35,10 +52,11 @@ export default function LoginPage() {
     }
   };
 
+  // Google OAuth login
   const handleGoogleButton = async () => {
     try {
       await signIn("google", {
-        callbackUrl: "/",
+        callbackUrl: "/?login=true",
       });
     } catch (err) {
       console.error("Google sign-in failed:", err);

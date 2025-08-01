@@ -257,7 +257,7 @@ function Menu() {
           onClick={(e) => {
             e.preventDefault(); // important
             signOut({ redirect: false });
-            router.push("/auth/login");
+            router.push("/auth/login?logout=true");
           }}
           className={`flex items-center text-[var(--text-color)] 
             relative hover:cursor-pointer group duration-300 ease 

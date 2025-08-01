@@ -15,7 +15,7 @@ export default function AuthErrorPage() {
   const message = errorMessages[error] || "An unexpected error occurred.";
 
   return (
-    <div className="h-screen w-full max-w-2xl flex flex-col items-center justify-center gap-4 mx-auto">
+    <div className="h-screen w-full max-w-2xl flex flex-col items-center justify-center gap-4 mx-auto px-2 md:px-0">
       <h1 className="text-2xl">Error signing in</h1>
       <p className="text-lg text-red-500 text-center">{message}</p>
       {/* Add a link back to sign-in */}
