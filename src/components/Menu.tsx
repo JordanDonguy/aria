@@ -27,7 +27,7 @@ function Menu() {
   const router = useRouter();
 
   const pathname = usePathname();
-  const isAuthPage = pathname.startsWith('/auth');
+  const isAuthPage = pathname.startsWith('/auth') || pathname.startsWith('/user');
 
   // If user clicks on new chat, reset messages and document.title
   function newChat() {
@@ -224,7 +224,7 @@ function Menu() {
 
       {/* ----------- Login / Back to chat button ----------- */}
       <Link
-        href={isAuthPage ? "/" : "/auth/login"}
+        href={isAuthPage ? "/" : (isLoggedIn ? "/user" : "/auth/login")}
         onClick={() => window.innerWidth < 768 ? setShowMenu(false) : null}
         className={`flex items-center text-[var(--text-color)] 
           relative hover:cursor-pointer group duration-300 ease 
@@ -247,7 +247,7 @@ function Menu() {
           ${hideElement ? "hidden " : ""} 
           ${displayElement ? "md:opacity-100" : "md:opacity-0 md:scale-x-0 md:mr-0"}`}
         >
-          {isAuthPage ? "Back to chat" : "Login"}
+          {isAuthPage ? "Back to chat" : isLoggedIn ? "User profile" : "Login"}
         </p>
       </Link>
 

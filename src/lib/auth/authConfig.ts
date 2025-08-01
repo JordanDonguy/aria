@@ -36,14 +36,14 @@ const authConfig: NextAuthOptions = {
         if (error || !users) throw new Error("User not found, please sign up");
 
         // Check if user is a Google-only user (e.g. no hashed password)
-        if (!users.hashed_password) {
+        if (!users.password) {
           throw new Error("This account uses only Google login. Please sign in with Google.");
         }
 
         // Compare provided password with hashed password from DB
         const isValid = await bcrypt.compare(
           credentials.password,
-          users.hashed_password
+          users.password
         );
         // Throw error if password does not match
         if (!isValid) throw new Error("Password incorrect");
@@ -70,6 +70,10 @@ const authConfig: NextAuthOptions = {
       // Ensure the sign-in request includes provider/account info; otherwise, reject the sign-in
       if (!account) return false;
 
+      const isLinking =
+        typeof account?.redirect_uri === "string" &&
+        account.redirect_uri.includes("/link-google");
+
       if (account.provider === "google") {
         // Check if user already exists with this Google email
         const { data: existingUser } = await supabase
@@ -82,32 +86,44 @@ const authConfig: NextAuthOptions = {
         if (!existingUser) {
           const { error } = await supabase.from("users").insert({
             email: user.email,
-            providers: ["google"],
+            providers: ["Google"],
           });
           if (error) return false;
         }
-        // If user exists but 'google' provider not listed, return error message
-        else if (!existingUser.providers.includes("google")) {
-          throw new Error("An account with this email already exists. Please login with your password first, then link your Google account in profile settings.")
-        };
 
+        // Block if account exists but user is not already signed in (to avoid hijacking)
+        if (!existingUser.providers.includes("Google") && existingUser.providers.includes("Credentials") && isLinking) {
+          throw new Error(
+            "AccountExistsNeedsLinking"
+          );
+        }
+
+        // Link Google provider if signed in and provider is not already linked
+        if (existingUser && !existingUser.providers.includes("Google")) {
+          const updatedProviders = [...existingUser.providers, "Google"];
+          await supabase
+            .from("users")
+            .update({ providers: updatedProviders })
+            .eq("id", existingUser.id);
+        }
         return true;            // allow Google sign-in if no problem
       }
       return true               // Allow sign-in for other providers (e.g. credentials)
     },
 
     // Customize session object returned to client
-      async session({ session }) {
+    async session({ session }) {
       if (session.user?.email) {
         // Fetch the custom user ID from Supabase using the email
         const { data, error } = await supabase
           .from("users")
-          .select("id")
+          .select("id, providers")
           .eq("email", session.user.email)
           .single();
 
         if (!error && data) {
           session.user.id = data.id;
+          session.user.providers = data.providers;
         }
       }
       return session;
@@ -121,6 +137,22 @@ const authConfig: NextAuthOptions = {
       }
       return token;
     },
+
+    // After Google linking, redirect to profile page with success flag
+    async redirect({ url, baseUrl }) {
+      // Allow absolute URLs within same origin
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+
+      // Allow relative URLs
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`;
+      }
+
+      // Otherwise fallback to base
+      return baseUrl;
+    }
   },
 
   // Use JWT for session management (instead of database sessions)
@@ -130,7 +162,10 @@ const authConfig: NextAuthOptions = {
   jwt: { secret: process.env.JWT_SECRET },
 
   // Custom sign-in page route
-  pages: { signIn: "/auth/signin" },
+  pages: {
+    signIn: "/auth/signin",
+    error: "/auth/error",
+  },
 };
 
 export default authConfig;

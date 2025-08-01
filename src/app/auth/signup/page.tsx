@@ -1,9 +1,10 @@
 'use client';
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,8 +13,16 @@ export default function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
+  const { status } = useSession();
+
+  // Redirect user to /user if logged in and trying to access /auth/signup
+  useEffect(() => {
+    if (status === "authenticated") return router.push("/user")
+  }, [status])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
 
     const res = await signIn("credentials", {
       redirect: false,
@@ -98,7 +107,7 @@ export default function LoginPage() {
         id="google-btn"
         type="button"
         onClick={handleGoogleButton}
-        className="relative flex items-center justify-start h-14 px-4 border rounded-full border-gray-400 hover:bg-[var(--user-button-color)] hover:cursor-pointer"
+        className="relative flex items-center justify-start h-14 px-4 border rounded-full hover:bg-[var(--user-button-color)] hover:cursor-pointer"
       >
         <img src="/google-logo.webp" alt="google-logo" className="w-10 h-10 absolute left-4" />
         <p className="text-base mx-auto">Continue with Google</p>
