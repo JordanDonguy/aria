@@ -2,7 +2,6 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
-import { createClient } from "@supabase/supabase-js";
 import { NextAuthOptions } from "next-auth";
 import { supabase } from "../supabase";
 
@@ -26,18 +25,18 @@ const authConfig: NextAuthOptions = {
         }
 
         // Fetch user by email from Supabase
-        const { data: user, error } = await supabase
+        const { data: user } = await supabase
           .from("users")
           .select("*")
           .eq("email", credentials.email)
           .single();
 
         // Throw error if user not found or error occurs
-        if (error || !user) throw new Error("User not found, please sign up");
+        if (!user) throw new Error("User not found, please sign up");
 
         // Check if user is a Google-only user (e.g. no hashed password)
         if (!user.password) {
-          throw new Error("This account uses only Google login. Please sign in with Google.");
+          throw new Error("This account was created using Google sign-in. To set a password and log in with email/password, please sign in with Google first, then create a password in your user profile.");
         }
 
         // Compare provided password with hashed password from DB
@@ -70,10 +69,6 @@ const authConfig: NextAuthOptions = {
       // Ensure the sign-in request includes provider/account info; otherwise, reject the sign-in
       if (!account) return false;
 
-      const isLinking =
-        typeof account?.redirect_uri === "string" &&
-        account.redirect_uri.includes("/link-google");
-
       if (account.provider === "google") {
         // Check if user already exists with this Google email
         const { data: existingUser } = await supabase
@@ -93,20 +88,37 @@ const authConfig: NextAuthOptions = {
         }
 
         // Block if account exists but user is not already signed in (to avoid hijacking)
-        if (!existingUser.providers.includes("Google") && existingUser.providers.includes("Credentials") && isLinking) {
-          throw new Error(
-            "AccountExistsNeedsLinking"
-          );
+        if (
+          !existingUser.providers.includes("Google") &&
+          existingUser.providers.includes("Credentials")
+        ) {
+          const now = new Date();
+          const linkingDate = existingUser.google_linking
+            ? new Date(existingUser.google_linking)
+            : null;
+
+          // If user recently initiated linking (within 60s), allow and update providers
+          if (linkingDate && (now.getTime() - linkingDate.getTime()) / 1000 < 60) {
+            const updatedProviders = [...existingUser.providers, "Google"];
+
+            const { error: updateError } = await supabase
+              .from("users")
+              .update({
+                providers: updatedProviders,
+                google_linking: null, // Clear the flag after use
+              })
+              .eq("id", existingUser.id);
+
+            if (updateError) {
+              console.error("Failed to update providers after linking:", updateError);
+              return false;
+            }
+            return true;
+          }
+          // Otherwise block Google sign-in
+          throw new Error("An account with this email already exists. Please sign in with your password and link Google account from your profile.");
         }
 
-        // Link Google provider if signed in and provider is not already linked
-        if (existingUser && !existingUser.providers.includes("Google")) {
-          const updatedProviders = [...existingUser.providers, "Google"];
-          await supabase
-            .from("users")
-            .update({ providers: updatedProviders })
-            .eq("id", existingUser.id);
-        }
         return true;            // allow Google sign-in if no problem
       }
       return true               // Allow sign-in for other providers (e.g. credentials)

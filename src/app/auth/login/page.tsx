@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
+import { loginSchema } from "@/lib/schemas";
+import { ZodError } from "zod";
 import { toast } from "react-toastify";
 import Link from "next/link";
 
@@ -39,16 +41,26 @@ export default function LoginPage() {
   // Credentials login
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      // Validate inputs with zod
+      const validatedData = loginSchema.parse({ email, password });
 
-    const res = await signIn("credentials", {
-      callbackUrl: "/?login=true",
-      email,
-      password,
-    });
-    if (res?.error) {
-      setError(res.error);
-    } else {
-      router.push("/");
+      const res = await signIn("credentials", {
+        callbackUrl: "/?login=true",
+        ...validatedData,
+      });
+
+      if (res?.error) {
+        setError(res.error);
+      } else {
+        router.push("/");
+      }
+    } catch (err) {
+      if (err instanceof ZodError) {
+        setError(err.issues[0].message); // display first validation error
+      } else {
+        setError("Something went wrong.");
+      }
     }
   };
 

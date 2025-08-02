@@ -5,9 +5,10 @@ import { CircleArrowUp } from "lucide-react";
 import { useConversations } from "@/app/contexts/ConversationsContext";
 import { decodeStream } from "@/lib/utils/decodeStram";
 import { askConversationTitle } from "@/lib/utils/askConversationTitle";
+import { chatInputSchema } from "@/lib/schemas";
 
 function UserInput() {
-  const { 
+  const {
     messages,
     setMessages,
     addMessage,
@@ -21,10 +22,18 @@ function UserInput() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError("");
     if (!input.trim()) return;
 
+    // Validate data with zod
+    const validatedData = chatInputSchema.safeParse({ message: input });
+    if (!validatedData.success) {
+      setError(validatedData.error.issues[0].message)
+      return
+    };
+
     // Save form input in a variable and reset before reseting it
-    const userContent = input;
+    const userContent = validatedData.data.message;
     setInput("");
 
     // Add the user message first

@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from 'next/navigation';
 import { toast } from "react-toastify";
 import { useSession, signOut } from "next-auth/react";
+import { updatePasswordSchema, createPasswordSchema } from "@/lib/schemas";
+import { ZodError } from "zod";
 import { useRouter } from "next/navigation";
 
 export default function UserPage() {
@@ -24,85 +26,132 @@ export default function UserPage() {
   // Redirect user to /auth/login if not logged in and trying to access /user
   useEffect(() => {
     if (status !== "authenticated") return router.push("/auth/login")
-  }, [status])
+  }, [status]);
+
+  // Prevent displaying deleting confirmation button on mount
+  useEffect(() => {
+    setShowDeleteConfirm(false)
+  }, []);
 
   // Update user password
   const updatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check if password are at least 8 characters
-    if (currentPassword.length < 8 || newPassword.length < 8 || confirmPassword.length < 8) {
-      setError("Passwords need to be minimum 8 characters long");
-      return
-    };
+    try {
+      // Check if password are at least 8 characters
+      if (currentPassword.length < 8 || newPassword.length < 8 || confirmPassword.length < 8) {
+        setError("Passwords need to be minimum 8 characters long");
+        return
+      };
 
-    // Check if new password and confirm password match
-    if (newPassword !== confirmPassword) {
-      setError("New password and confirm password don't match");
-      return
-    };
+      // Check if new password and confirm password match
+      if (newPassword !== confirmPassword) {
+        setError("New password and confirm password don't match");
+        return
+      };
 
-    // API call to update password
-    const res = await fetch("/api/auth/update-password", {
-      method: "POST",
-      body: JSON.stringify({ currentPassword, newPassword })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data?.error || "Error while updating your password")
-      return
-    };
-    // If successful, reset password inputs and display toast success
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    toast.success("Your password has been updated");
+      // Validate data with zod
+      const validatedData = updatePasswordSchema.parse({ currentPassword, newPassword });
+
+      // API call to update password
+      const res = await fetch("/api/auth/update-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(validatedData)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data?.error || "Error while updating your password")
+        return
+      };
+      // If successful, reset password inputs and display toast success
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      toast.success("Your password has been updated");
+    } catch (err) {
+      if (err instanceof ZodError) {
+        setError(err.issues[0].message); // display first validation error
+      } else {
+        setError("Something went wrong.");
+      }
+    }
   };
 
   // If user doesn't have a password yet (registered with Google)
   const createPassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check if password are at least 8 characters
-    if (newPassword.length < 8 || confirmPassword.length < 8) {
-      setError("Passwords need to be minimum 8 characters long");
-      return
-    };
+    try {
+      // Check if password are at least 8 characters
+      if (newPassword.length < 8 || confirmPassword.length < 8) {
+        setError("Passwords need to be minimum 8 characters long");
+        return
+      };
 
-    // Check if new password and confirm password match
-    if (newPassword !== confirmPassword) {
-      setError("New password and confirm password don't match");
-      return
-    };
+      // Check if new password and confirm password match
+      if (newPassword !== confirmPassword) {
+        setError("New password and confirm password don't match");
+        return
+      };
 
-    // API call to create a password
-    const res = await fetch("/api/auth/create-password", {
-      method: "POST",
-      body: JSON.stringify({ newPassword })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data?.error || "Error while creating your password")
-      return
-    };
-    // If successful, update session to get new providers list, reset password inputs, and display toast success
-    await update();
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    toast.success("Your password has been created");
+      // Validate data with zod
+      const validatedData = createPasswordSchema.parse({ newPassword });
+
+      // API call to create a password
+      const res = await fetch("/api/auth/create-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(validatedData)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data?.error || "Error while creating your password")
+        return
+      };
+      // If successful, update session to get new providers list, reset password inputs, and display toast success
+      await update();
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      toast.success("Your password has been created");
+    } catch (err) {
+      if (err instanceof ZodError) {
+        setError(err.issues[0].message); // display first validation error
+      } else {
+        setError("Something went wrong.");
+      }
+    }
   };
 
   // Request Google OAuth signin but with a callback to link-google
   const handleGoogleButton = async () => {
     try {
+      // Call API route to mark start of google linking
+      const res = await fetch("/api/auth/google-linking", {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Failed to start Google linking");
+        return
+      }
+
+      // Proceed with Google sign-in and callback to your linking page
       await signIn("google", {
-        callbackUrl: "/user?linked=google", state: 'link'
+        callbackUrl: "/user?linked=google"
       });
     } catch (err) {
+      setError(`Google account linking failed: ${err}`)
       console.error("Google account linking failed:", err);
     }
   };
+
 
   // Show delete confirmation button
   const toggleDeleteConfirm = () => {
@@ -119,7 +168,6 @@ export default function UserPage() {
       },
     });
     const data = await res.json();
-    toggleDeleteConfirm();
     if (!res.ok) {
       setError(data.message || "Failed to delete account")
     };
@@ -136,11 +184,6 @@ export default function UserPage() {
       window.history.replaceState({}, '', url.toString());
     }
   }, []);
-
-  // Prevent displaying deleting confirmation button on mount
-  useEffect(() => {
-    setShowDeleteConfirm(false)
-  }, [])
 
   return (
     !showDeleteConfirm ? (

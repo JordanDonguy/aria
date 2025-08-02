@@ -61,6 +61,7 @@ function Menu() {
 
       const data = await res.json();
       setMessages(data);
+      router.push("/");                       // Navigate to chat view
       setTimeout(() => scrollDown(), 50);     // Scroll down after a very short delay to make sure UI's rendered
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -252,7 +253,7 @@ function Menu() {
       </Link>
 
       {/* ----------- Logout button ----------- */}
-      {isLoggedIn && (
+      {isLoggedIn ? (
         <button
           onClick={(e) => {
             e.preventDefault(); // important
@@ -273,44 +274,47 @@ function Menu() {
             Logout
           </p>
         </button>
-      )}
+      ) : null }
 
       {/* Conversations section */}
-
-      <h2 className={`duration-400 ease text-start text-2xl pt-4 pb-2 w-full md:origin-left
+      {isLoggedIn ? (
+        <h2 className={`duration-400 ease text-start text-2xl pt-4 pb-2 w-full md:origin-left
           ${hideElement ? "hidden " : ""} 
           ${displayElement ? "opacity-100" : "opacity-0 md:scale-x-0"}`}
-      >
-        Conversations:
-      </h2>
+        >
+          Conversations:
+        </h2>
+      ) : null}
 
-      <div className="w-full flex flex-col gap-4 max-h-fit overflow-y-scroll scrollbar-hide mb-4">
-        {conversations.map((conversation, idx) => (
-          <div
-            key={idx}
-            className={`w-full relative ease origin-top
+      {isLoggedIn ? (
+        <div className="w-full flex flex-col gap-4 max-h-fit overflow-y-scroll scrollbar-hide mb-4">
+          {conversations.map((conversation, idx) => (
+            <div
+              key={idx}
+              className={`w-full relative ease origin-top
             ${hideElement ? "hidden " : ""}
             ${displayElement ? "opacity-100 scale-y-100 duration-400 " : "opacity-0 scale-y-0 md:scale-y-100 duration-200 md:duration-400"}`}
-          >
-            {/* Conversation select buttons */}
-            <button
-              onClick={() => fetchMessages(conversation.id)}
-              className={`${conversation.id === conversationId ? "bg-[var(--hover-color)]" : "bg-[var(--bg-color)]"} px-4 py-4 rounded-xl duration-100 
+            >
+              {/* Conversation select buttons */}
+              <button
+                onClick={() => fetchMessages(conversation.id)}
+                className={`${conversation.id === conversationId ? "bg-[var(--hover-color)]" : "bg-[var(--bg-color)]"} px-4 py-4 rounded-xl duration-100 
               w-full text-left whitespace-nowrap overflow-hidden text-ellipsis 
               hover:cursor-pointer hover:bg-[var(--hover-color)]`}
-            >
-              {conversation.title}
-            </button>
-            {/* Conversation delete button */}
-            <button
-              onClick={() => deleteConversation(conversation.id)}
-              className="text-[var(--text-color)] rounded-full absolute right-[6px] top-[6px] duration-150 hover:cursor-pointer hover:scale-115 active:scale-90"
-            >
-              <CircleX />
-            </button>
-          </div>
-        ))}
-      </div>
+              >
+                {conversation.title}
+              </button>
+              {/* Conversation delete button */}
+              <button
+                onClick={() => deleteConversation(conversation.id)}
+                className="text-[var(--text-color)] rounded-full absolute right-[6px] top-[6px] duration-150 hover:cursor-pointer hover:scale-115 active:scale-90"
+              >
+                <CircleX />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </header>
   )
 }
