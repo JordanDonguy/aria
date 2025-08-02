@@ -8,6 +8,7 @@ import { askConversationTitle } from "@/lib/utils/askConversationTitle";
 import { chatInputSchema } from "@/lib/schemas";
 import { postConversation } from "@/lib/utils/conversationsUtils";
 import { postMessages } from "@/lib/utils/messagesUtils";
+import { useSession } from "next-auth/react";
 
 function UserInput() {
   const {
@@ -21,11 +22,17 @@ function UserInput() {
     setError
   } = useConversations();
   const [input, setInput] = useState<string>("");
+  const { status } = useSession();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     if (!input.trim()) return;
+
+    // Blur the active element (input) immediately on submit to close mobile keyboard
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    };
 
     // Validate data with zod
     const validatedData = chatInputSchema.safeParse({ message: input });
@@ -70,14 +77,18 @@ function UserInput() {
       // Decode streamed response and update last message
       const assistantContent = await decodeStream(res, updateLastMessage);
 
-      // Ask conversation title to Mistral if new conversation and save conversation to db
+      // Ask conversation title to Mistral if new conversation, save conversation and messages to db (if user logged in)
       if (messages.length < 2) {
         document.title = await askConversationTitle(userContent);
-        const newConversationId = await postConversation(addConversation, setConversationId);
-        // Save messages to db
-        await postMessages(newConversationId, userContent, assistantContent)
+        if (status === "authenticated") {
+          const newConversationId = await postConversation(addConversation, setConversationId);
+          // Save messages to db
+          await postMessages(newConversationId, userContent, assistantContent)
+        }
       } else {
-        await postMessages(conversationId, userContent, assistantContent)
+        if (status === "authenticated") {
+          await postMessages(conversationId, userContent, assistantContent)
+        }
       }
     } catch (error) {
       console.error("Error calling Mistral API:", error);

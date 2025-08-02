@@ -20,6 +20,8 @@ export default function AppProviders({ children }: { children: ReactNode }) {
           <ToastContainer
             position="top-right"
             autoClose={4000}
+            toastClassName="pointer-events-auto"
+            className="!top-[70px] !z-10"
           />
         </ConversationsProvider>
       </SessionProvider>

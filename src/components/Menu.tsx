@@ -38,7 +38,8 @@ function Menu() {
     router.push("/");
     if (window.innerWidth < 768) {
       setShowMenu(false)
-    }
+    };
+    document.title = "Aria";
   };
 
   // Used to prevent display glitch on elements relying on resolvedTheme and session for colors and display
@@ -87,7 +88,7 @@ function Menu() {
 
   return (
     <header
-      className={`fixed z-20 top-0 left-0 md:p-4 px-2 md:min-h-screen
+      className={`fixed z-30 top-0 left-0 md:p-4 px-2 md:min-h-screen
         shrink-0 bg-[var(--menu-color)] flex flex-col 
         items-start gap-3 header-transition
         ${showMenu ? "md:w-64 w-full h-screen md:shadow-sm" : "md:[width:calc(40px+2rem)] w-full md:h-full  h-[70px]"}`}
@@ -199,6 +200,9 @@ function Menu() {
             e.preventDefault(); // important
             signOut({ redirect: false });
             router.push("/auth/login?logout=true");
+            if (window.innerWidth < 768) {
+              setShowMenu(false)
+            };
           }}
           className={`flex items-center text-[var(--text-color)] 
             relative hover:cursor-pointer group duration-300 ease 
