@@ -1,9 +1,11 @@
-import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
 import { NextAuthOptions } from "next-auth";
 import { supabase } from "../supabase";
+import { loginSchema } from "../schemas";
+import { ZodError } from "zod";
+import sanitizeHtml from "sanitize-html";
 
 const authConfig: NextAuthOptions = {
   // Configure authentication providers
@@ -18,41 +20,54 @@ const authConfig: NextAuthOptions = {
       },
 
       // Called when user tries to login with credentials
-      async authorize(credentials?: { email?: string; password?: string }) {
-        // Throw error if email or password is missing, rejects login
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Please enter an email and a password");
+      async authorize(credentials) {
+        try {
+          // Validate input with zod
+          const { email, password } = loginSchema.parse(credentials);
+
+          // Sanitize email
+          const cleanEmail = sanitizeHtml(email, { allowedTags: [], allowedAttributes: {} });
+
+          // Throw error if email or password is missing, rejects login
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error("Please enter an email and a password");
+          }
+
+          // Fetch user by email from Supabase
+          const { data: user } = await supabase
+            .from("users")
+            .select("*")
+            .eq("email", cleanEmail)
+            .single();
+
+          // Throw error if user not found or error occurs
+          if (!user) throw new Error("User not found, please sign up");
+
+          // Check if user is a Google-only user (e.g. no hashed password)
+          if (!user.password) {
+            throw new Error("This account was created using Google sign-in. To set a password and log in with email/password, please sign in with Google first, then create a password in your user profile.");
+          }
+
+          // Compare provided password with hashed password from DB
+          const isValid = await bcrypt.compare(
+            password,
+            user.password
+          );
+          // Throw error if password does not match
+          if (!isValid) throw new Error("Password incorrect");
+
+          // Return user object to create session (can include extra props here)
+          return {
+            id: user.id,
+            email: user.email ?? undefined,
+            name: user.name ?? undefined,
+          };
+        } catch (error) {
+          if (error instanceof ZodError) {
+            throw new Error(error.issues[0].message);
+          }
+          throw error;
         }
-
-        // Fetch user by email from Supabase
-        const { data: user } = await supabase
-          .from("users")
-          .select("*")
-          .eq("email", credentials.email)
-          .single();
-
-        // Throw error if user not found or error occurs
-        if (!user) throw new Error("User not found, please sign up");
-
-        // Check if user is a Google-only user (e.g. no hashed password)
-        if (!user.password) {
-          throw new Error("This account was created using Google sign-in. To set a password and log in with email/password, please sign in with Google first, then create a password in your user profile.");
-        }
-
-        // Compare provided password with hashed password from DB
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-        // Throw error if password does not match
-        if (!isValid) throw new Error("Password incorrect");
-
-        // Return user object to create session (can include extra props here)
-        return {
-          id: user.id,
-          email: user.email ?? undefined,
-          name: user.name ?? undefined,
-        };
       },
     }),
 

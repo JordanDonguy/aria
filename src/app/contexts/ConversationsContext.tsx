@@ -4,12 +4,12 @@
 import { useEffect } from "react";
 import { createContext, useState, useContext, ReactNode } from "react";
 
-interface Message {
+export interface Message {
   role: "user" | "assistant";
   content: string;
 }
 
-interface Conversation {
+export interface Conversation {
   id: string;
   title: string;
 }

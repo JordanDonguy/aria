@@ -11,6 +11,8 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import scrollDown from "@/lib/utils/scrollDown";
 import Link from 'next/link';
+import { deleteConversation } from "@/lib/utils/conversationsUtils";
+import { fetchMessages } from "@/lib/utils/messagesUtils";
 
 function Menu() {
   const [mounted, setMounted] = useState<boolean>(false);               // To wait for component to be mounted to display some elements
@@ -21,7 +23,7 @@ function Menu() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { setMessages, conversations, setConversations, conversationId, setConversationId, setError } = useConversations();
 
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const isLoggedIn = status === "authenticated";
 
   const router = useRouter();
@@ -36,68 +38,6 @@ function Menu() {
     router.push("/");
     if (window.innerWidth < 768) {
       setShowMenu(false)
-    }
-  };
-
-  // Fetch messages of a conversation when clicking on the conversation's button
-  async function fetchMessages(conversation_id: string) {
-    try {
-      setConversationId(conversation_id);     // Update conversationId (and automatically document.title)
-      // If on mobile, close menu
-      if (window.innerWidth < 768) {
-        setShowMenu(false)
-      };
-      const res = await fetch(`/api/messages?conversation_id=${conversation_id}`);
-
-      if (res.status === 429) {
-        setError("Too many requests... Please wait a minute 🙏");
-        return
-      };
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData?.error || "Failed to fetch messages");
-      }
-
-      const data = await res.json();
-      setMessages(data);
-      router.push("/");                       // Navigate to chat view
-      setTimeout(() => scrollDown(), 50);     // Scroll down after a very short delay to make sure UI's rendered
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-    }
-  };
-
-  // delete a conversation if clicking delete button
-  async function deleteConversation(conversation_id: string) {
-    try {
-      // If deleting current conversation, reset messages and conversationId
-      if (conversation_id === conversationId) {
-        setMessages([]);
-        setConversationId("");
-      };
-      // Remove conversation from conversations list
-      setConversations((prev) =>
-        prev.filter((conversation) => conversation.id !== conversation_id)
-      );
-      // Delete conversation in db
-      const res = await fetch(`/api/conversations?id=${conversation_id}`, {
-        method: "DELETE"
-      });
-
-      if (res.status === 429) {
-        setError("Too many requests... Please wait a minute 🙏");
-        return
-      };
-
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData?.error || "Failed to delete conversation");
-      }
-
-    } catch (error) {
-      console.error("Error deleting conversation:", error);
     }
   };
 
@@ -143,7 +83,7 @@ function Menu() {
       }
     };
     fetchConversations();
-  }, [status])
+  }, [status, setConversations, setError])
 
   return (
     <header
@@ -274,7 +214,7 @@ function Menu() {
             Logout
           </p>
         </button>
-      ) : null }
+      ) : null}
 
       {/* Conversations section */}
       {isLoggedIn ? (
@@ -297,7 +237,15 @@ function Menu() {
             >
               {/* Conversation select buttons */}
               <button
-                onClick={() => fetchMessages(conversation.id)}
+                onClick={() => fetchMessages(
+                  conversation.id,
+                  setConversationId,
+                  setMessages,
+                  setError,
+                  setShowMenu,
+                  router,
+                  scrollDown,
+                )}
                 className={`${conversation.id === conversationId ? "bg-[var(--hover-color)]" : "bg-[var(--bg-color)]"} px-4 py-4 rounded-xl duration-100 
               w-full text-left whitespace-nowrap overflow-hidden text-ellipsis 
               hover:cursor-pointer hover:bg-[var(--hover-color)]`}
@@ -306,7 +254,16 @@ function Menu() {
               </button>
               {/* Conversation delete button */}
               <button
-                onClick={() => deleteConversation(conversation.id)}
+                onClick={() =>
+                  deleteConversation(
+                    conversation.id,
+                    conversationId,
+                    setMessages,
+                    setConversationId,
+                    setConversations,
+                    setError
+                  )
+                }
                 className="text-[var(--text-color)] rounded-full absolute right-[6px] top-[6px] duration-150 hover:cursor-pointer hover:scale-115 active:scale-90"
               >
                 <CircleX />

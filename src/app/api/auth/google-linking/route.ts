@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import authConfig from "@/lib/auth/authConfig";
 import { supabase } from "@/lib/supabase";
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   const res = NextResponse;
 
   // Get session

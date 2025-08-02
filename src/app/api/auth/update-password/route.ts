@@ -4,6 +4,8 @@ import bcrypt from 'bcrypt';
 import { getServerSession } from 'next-auth';
 import authConfig from "@/lib/auth/authConfig";
 import { supabase } from "@/lib/supabase";
+import { updatePasswordSchema } from "@/lib/schemas";
+import { ZodError } from "zod";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +14,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { currentPassword, newPassword } = await req.json();
+    const body = await req.json();
+
+    // Validate inputs with zod
+    const { currentPassword, newPassword } = updatePasswordSchema.parse(body)
 
     if (!currentPassword || !newPassword) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -50,6 +55,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
+    if (err instanceof ZodError) {
+      return NextResponse.json(
+        { error: err.issues[0].message },
+        { status: 400 }
+      )
+    };
+
     console.error('Update password error:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

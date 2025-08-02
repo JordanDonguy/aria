@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter, aiBuckets } from "@/lib/middlewares/rateLimit";
 import { checkAndUpdateDailyLimit } from "@/lib/dailyLimit/checkUpdateDailyLimit";
+import sanitizeHtml from "sanitize-html";
 
 interface Message {
   role: "user" | "assistant";
@@ -43,6 +44,19 @@ export async function POST(req: NextRequest) {
 
     const { messages } = await req.json() as { messages: Message[] };
 
+    // Sanitize input
+    const cleanMessages = messages.map((msg) =>
+      msg.role === "user"
+        ? {
+          ...msg,
+          content: sanitizeHtml(msg.content, {
+            allowedTags: [],
+            allowedAttributes: {},
+          }),
+        }
+        : msg
+    );
+
     if (!Array.isArray(messages)) {
       return NextResponse.json({ error: "Invalid messages format" }, { status: 400 });
     }
@@ -60,7 +74,7 @@ export async function POST(req: NextRequest) {
             role: "system",
             content: `You are Aria, a helpful assistant that always responds in the same language as the user. Add relevant emojis in titles or responses to make the message more lively and engaging 😊. ${messages.length < 3 ? "Don't forget to present yourself." : "Do not present yourself."} Avoid using HTML or Markdown tables; use lists or clear formatting instead.`,
           },
-          ...messages,
+          ...cleanMessages,
         ],
         max_tokens: 2000,
         stream: true,

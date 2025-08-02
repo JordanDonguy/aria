@@ -4,8 +4,6 @@ import { signIn } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { loginSchema } from "@/lib/schemas";
-import { ZodError } from "zod";
 import { useSession } from "next-auth/react";
 
 export default function LoginPage() {
@@ -20,55 +18,44 @@ export default function LoginPage() {
   // Redirect user to /user if logged in and trying to access /auth/signup
   useEffect(() => {
     if (status === "authenticated") return router.push("/user");
-  }, [status])
+  }, [status, router])
 
   // Credentials sign up
   const handleSubmit = async (e: React.FormEvent) => {
-    try {
-      e.preventDefault();
+    e.preventDefault();
 
-      // Check if password are at least 8 characters
-      if (password.length < 8 || confirmPassword.length < 8) {
-        setError("Passwords need to be minimum 8 characters long");
-        return
-      };
+    // Check if password are at least 8 characters
+    if (password.length < 8 || confirmPassword.length < 8) {
+      setError("Passwords need to be minimum 8 characters long");
+      return
+    };
 
-      // Check if new password and confirm password match
-      if (password !== confirmPassword) {
-        setError("Password and confirm password don't match");
-        return
-      };
+    // Check if new password and confirm password match
+    if (password !== confirmPassword) {
+      setError("Password and confirm password don't match");
+      return
+    };
 
-      // Validate inputs with zod
-      const validatedData = loginSchema.parse({ email, password });
+    // Sign up user in db
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
 
-      // Sign up user in db
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(validatedData),
-      });
+    const data = await res.json();
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error);
-        return;
-      }
-
-      // After successful sign-up, log in user immediately
-      await signIn('credentials', {
-        callbackUrl: "/?login=true",
-        email,
-        password
-      })
-    } catch (err) {
-      if (err instanceof ZodError) {
-        setError(err.issues[0].message); // display first validation error
-      } else {
-        setError("Something went wrong.");
-      }
+    if (!res.ok) {
+      setError(data.error);
+      return;
     }
+
+    // After successful sign-up, log in user immediately
+    await signIn('credentials', {
+      callbackUrl: "/?login=true",
+      email,
+      password
+    })
   };
 
   // Google OAuth sign up

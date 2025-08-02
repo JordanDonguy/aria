@@ -4,7 +4,7 @@ import authConfig from "@/lib/auth/authConfig";
 import { NextRequest, NextResponse } from "next/server";
 
 // --------------- GET user's conversations list ---------------
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await getServerSession(authConfig);
 
   if (!session || !session.user?.id) {

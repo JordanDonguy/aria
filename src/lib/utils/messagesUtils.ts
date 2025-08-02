@@ -1,0 +1,70 @@
+import type { Message } from "@/app/contexts/ConversationsContext";
+import { useRouter } from 'next/navigation';
+type Router = ReturnType<typeof useRouter>;
+
+// ------------ Post messages (user and assistant) to db ------------
+export async function postMessages(conversationId: string, userContent: string, assistantContent: string) {
+  try {
+    await Promise.all([
+      fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversation_id: conversationId,
+          role: "user",
+          content: userContent,
+        }),
+      }),
+      fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversation_id: conversationId,
+          role: "assistant",
+          content: assistantContent,
+        }),
+      }),
+    ]);
+  } catch (error) {
+    throw new Error("Error saving messages to db.");
+    console.error(error)
+  }
+};
+
+// ------------ Fetch messages of a conversation from db ------------
+export async function fetchMessages(
+  conversation_id: string,
+  setConversationId: React.Dispatch<React.SetStateAction<string>>,
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
+  setError: React.Dispatch<React.SetStateAction<string | null>>,
+  setShowMenu: React.Dispatch<React.SetStateAction<boolean>>,
+  router: Router,
+  scrollDown: () => void,
+) {
+  try {
+    setConversationId(conversation_id);
+
+    if (window.innerWidth < 768) {
+      setShowMenu(false);
+    }
+
+    const res = await fetch(`/api/messages?conversation_id=${conversation_id}`);
+
+    if (res.status === 429) {
+      setError("Too many requests... Please wait a minute 🙏");
+      return;
+    }
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData?.error || "Failed to fetch messages");
+    }
+
+    const data = await res.json();
+    setMessages(data);
+    router.push("/");
+    setTimeout(() => scrollDown(), 50);
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+  }
+};

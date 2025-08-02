@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getServerSession } from "next-auth/next";
 import authConfig from "@/lib/auth/authConfig";
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE() {
   try {
     const session = await getServerSession(authConfig);
 
@@ -34,6 +34,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ message: "Account deleted successfully" }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ message: "Invalid request" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request :", error }, { status: 400 });
   }
 }

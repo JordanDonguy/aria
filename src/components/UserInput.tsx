@@ -6,6 +6,8 @@ import { useConversations } from "@/app/contexts/ConversationsContext";
 import { decodeStream } from "@/lib/utils/decodeStram";
 import { askConversationTitle } from "@/lib/utils/askConversationTitle";
 import { chatInputSchema } from "@/lib/schemas";
+import { postConversation } from "@/lib/utils/conversationsUtils";
+import { postMessages } from "@/lib/utils/messagesUtils";
 
 function UserInput() {
   const {
@@ -68,69 +70,15 @@ function UserInput() {
       // Decode streamed response and update last message
       const assistantContent = await decodeStream(res, updateLastMessage);
 
-      // Ask conversation title to Mistral if new conversation
+      // Ask conversation title to Mistral if new conversation and save conversation to db
       if (messages.length < 2) {
         document.title = await askConversationTitle(userContent);
-
-        const res = await fetch("/api/conversations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: document.title,
-          }),
-        });
-
-        const data = await res.json();
-
-        await addConversation(data.id, data.title);   // Add new conversation to conversations list
-        setConversationId(data.id);                   // update state for future renders
-
-        // Use a local variable to avoid race condition
-        const newConversationId = data.id;
-
-        // Post both messages with newConversationId
-        await fetch("/api/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            conversation_id: newConversationId,
-            role: "user",
-            content: userContent,
-          }),
-        });
-
-        await fetch("/api/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            conversation_id: newConversationId,
-            role: "assistant",
-            content: assistantContent,
-          }),
-        });
+        const newConversationId = await postConversation(addConversation, setConversationId);
+        // Save messages to db
+        await postMessages(newConversationId, userContent, assistantContent)
       } else {
-        // conversationId is assumed to already exist
-        await fetch("/api/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            conversation_id: conversationId,
-            role: "user",
-            content: userContent,
-          }),
-        });
-
-        await fetch("/api/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            conversation_id: conversationId,
-            role: "assistant",
-            content: assistantContent,
-          }),
-        });
+        await postMessages(conversationId, userContent, assistantContent)
       }
-
     } catch (error) {
       console.error("Error calling Mistral API:", error);
       if (error instanceof Error) {
@@ -139,7 +87,7 @@ function UserInput() {
         setError("Unknown error occurred");
       }
     }
-  }
+  };
 
   return (
     <form
