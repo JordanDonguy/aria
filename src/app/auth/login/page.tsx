@@ -4,8 +4,6 @@ import { signIn } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import Link from "next/link";
 
@@ -17,25 +15,28 @@ export default function LoginPage() {
 
   const { status } = useSession();
 
-  // Get logout params in url (to later display toast message or not)
-  const searchParams = useSearchParams();
-  const isLogout = searchParams.get('logout');
-
   // Redirect user to /user if logged in and trying to access /auth/login
   useEffect(() => {
-    if (status === "authenticated") return router.push("/user")
+    if (status === "authenticated") {
+      router.push("/user");
+    }
   }, [status, router]);
 
-  // If user just logged out, display a toast message
+  // If user just logged out, display toast and clean URL
   useEffect(() => {
-    if (isLogout) {
-      toast.success("Logged out successfully")
-      // Remove query param from URL
-      const url = new URL(window.location.href);
-      url.searchParams.delete('logout');
-      window.history.replaceState({}, '', url.toString());
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("logout")) {
+        toast.success("Logged out successfully");
+        params.delete("logout");
+        const newUrl =
+          window.location.pathname +
+          (params.toString() ? `?${params.toString()}` : "") +
+          window.location.hash;
+        window.history.replaceState({}, "", newUrl);
+      }
     }
-  }, [isLogout])
+  }, []);
 
   // Credentials login
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,8 +67,10 @@ export default function LoginPage() {
   };
 
   return (
-    <Suspense fallback={null}>
-      <form onSubmit={handleSubmit} className="max-w-xl h-[100svh] mx-auto p-2 flex flex-col justify-center gap-6 text-[var(--text-color)] ">
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-xl h-[100svh] mx-auto p-2 flex flex-col justify-center gap-6 text-[var(--text-color)]"
+      >
         <h1 className="text-2xl text-center font-bold">Login</h1>
         {/* Display error if any */}
         {error && <p className="text-red-500 text-center">{error}</p>}
@@ -92,13 +95,16 @@ export default function LoginPage() {
             id="password"
             name="password"
             placeholder="********"
-            className="border border-gray-400 p-4 w-full rounded "
+            className="border border-gray-400 p-4 w-full rounded"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
         {/* Submit button */}
-        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-gray-100 hover:cursor-pointer font-semibold rounded-full h-12 flex items-center justify-center">
+        <button
+          type="submit"
+          className="bg-blue-600 hover:bg-blue-700 text-gray-100 hover:cursor-pointer font-semibold rounded-full h-12 flex items-center justify-center"
+        >
           Sign In
         </button>
         {/* Google OAuth button */}
@@ -108,7 +114,11 @@ export default function LoginPage() {
           onClick={handleGoogleButton}
           className="relative flex items-center justify-start h-14 px-4 border rounded-full hover:bg-[var(--user-button-color)] hover:cursor-pointer"
         >
-          <img src="/google-logo.webp" alt="google-logo" className="w-10 h-10 absolute left-4" />
+          <img
+            src="/google-logo.webp"
+            alt="google-logo"
+            className="w-10 h-10 absolute left-4"
+          />
           <p className="text-base mx-auto">Continue with Google</p>
         </button>
         {/* Sign Up link */}
@@ -118,7 +128,6 @@ export default function LoginPage() {
             Sign Up
           </Link>
         </p>
-      </form >
-    </Suspense>
+      </form>
   );
 }
