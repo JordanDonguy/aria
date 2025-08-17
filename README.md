@@ -1,7 +1,7 @@
-# 🤖 aria — AI Chatbot App
+# 🤖 Aria — AI Chatbot App
 
 A modern, minimalistic chatbot application built with **Next.js** and **TypeScript**.  
-aria provides a smooth conversational interface powered by the **Mistral API** and a **Supabase** backend.
+Aria provides a smooth conversational interface powered by **Mistral API** and a **Supabase** database.
 
 ---
 
