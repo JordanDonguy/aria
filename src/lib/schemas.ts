@@ -21,6 +21,5 @@ export const createPasswordSchema = z.object({
 export const chatInputSchema = z.object({
   message: z.string()
     .min(1, "Message cannot be empty")
-    .max(1000, "Message is too long")
     .trim(),
 });

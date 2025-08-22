@@ -3,33 +3,38 @@ import { useRouter } from 'next/navigation';
 type Router = ReturnType<typeof useRouter>;
 
 // ------------ Post messages (user and assistant) to db ------------
-export async function postMessages(conversationId: string, userContent: string, assistantContent: string) {
+export async function postMessages(
+  conversationId: string,
+  userContent: string,
+  assistantContent: string
+) {
   try {
-    await Promise.all([
-      fetch("/api/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conversation_id: conversationId,
-          role: "user",
-          content: userContent,
-        }),
+    // Post user message first
+    await fetch("/api/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        conversation_id: conversationId,
+        role: "user",
+        content: userContent,
       }),
-      fetch("/api/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conversation_id: conversationId,
-          role: "assistant",
-          content: assistantContent,
-        }),
+    });
+
+    // Then post assistant message
+    await fetch("/api/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        conversation_id: conversationId,
+        role: "assistant",
+        content: assistantContent,
       }),
-    ]);
+    });
   } catch (error) {
+    console.error(error);
     throw new Error("Error saving messages to db.");
-    console.error(error)
   }
-};
+}
 
 // ------------ Fetch messages of a conversation from db ------------
 export async function fetchMessages(

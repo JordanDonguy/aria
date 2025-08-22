@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { CircleArrowUp } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { createSpeechRecognition } from "@/lib/utils/speechRecognition";
+import { CircleArrowUp, Mic, MicOff } from "lucide-react";
 import { useConversations } from "@/app/contexts/ConversationsContext";
 import { decodeStream } from "@/lib/utils/decodeStram";
 import { askConversationTitle } from "@/lib/utils/askConversationTitle";
@@ -10,7 +11,11 @@ import { postConversation } from "@/lib/utils/conversationsUtils";
 import { postMessages } from "@/lib/utils/messagesUtils";
 import { useSession } from "next-auth/react";
 
-function UserInput() {
+interface UserInputProps {
+  setPaddingBottom: React.Dispatch<React.SetStateAction<number>>
+}
+
+function UserInput({ setPaddingBottom }: UserInputProps) {
   const {
     messages,
     setMessages,
@@ -43,7 +48,12 @@ function UserInput() {
 
     // Save form input in a variable and reset before reseting it
     const userContent = validatedData.data.message;
+    
+    // Reset textarea height & main display padding bottom
     setInput("");
+    const textarea = document.getElementById("text-input") as HTMLTextAreaElement | null;
+    if (textarea) textarea.style.height = "auto"; // shrink back to initial
+    setPaddingBottom(0);
 
     // Add the user message first
     addMessage("user", userContent);
@@ -53,7 +63,6 @@ function UserInput() {
 
     // Updated messages including the new user input
     const updatedMessages = [...messages, { role: "user", content: userContent }];
-
 
     try {
       const res = await fetch("/api/mistral/chat", {
@@ -100,6 +109,30 @@ function UserInput() {
     }
   };
 
+  // ------ Speech recognition part ------
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<ReturnType<typeof createSpeechRecognition> | null>(null);
+
+  function toggleRecording() {
+    if (!isRecording) {
+      recognitionRef.current = createSpeechRecognition({
+        onResult: (transcript) => {
+          setInput(transcript);
+        },
+        onError: (err) => {
+          console.error("Speech error:", err);
+          setIsRecording(false);
+        },
+        onStop: () => setIsRecording(false),
+      });
+      recognitionRef.current?.start();
+      setIsRecording(true);
+    } else {
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+    }
+  }
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -109,27 +142,58 @@ function UserInput() {
         shadow-sm text-lg md:ml-20 ml-0 lg:ml-0
         transition-[margin] duration-500 ease-in-out"
     >
-      <fieldset className="flex justify-between p-4 w-full ">
-        <input
+      <fieldset className="flex flex-col gap-2 justify-between p-4 w-full ">
+        <textarea
           id="text-input"
           name="text-input"
           value={input}
           placeholder="Ask anything..."
-          onChange={(e) => setInput(e.target.value)}
-          className="w-full text-[var(--text-color)] bg-transparent outline-none px-2"
+          onChange={(e) => {
+            setInput(e.target.value);
+            // Auto-resize logic with max height
+            e.target.style.height = "auto";
+            const newHeight = Math.min(e.target.scrollHeight, 200); // 200px max
+            e.target.style.height = `${newHeight}px`;
+
+            // Adjust main display padding-bottom to match textarea height
+            setPaddingBottom(newHeight);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault(); // prevent newline
+              // Submit form manually
+              // Shift+Enter will naturally insert a newline
+              const form = e.currentTarget.form;
+              if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+            }
+          }}
+          className="w-full resize-none text-[var(--text-color)] bg-transparent outline-none px-2 overflow-y-auto"
           autoComplete="off"
-          maxLength={1000}
+          rows={1}
         />
-        <button
-          type="submit"
-          aria-label="submit-button"
-          className="
-            w-10 aspect-square flex items-center justify-center
-            text-[var(--text-color)] transition-transform duration-150
-            hover:scale-115 hover:cursor-pointer active:scale-90"
-        >
-          <CircleArrowUp size={32} />
-        </button>
+
+        <div className="flex justify-between">
+          <button
+            type="button"
+            aria-label="mic-button"
+            onClick={toggleRecording}
+            className="w-8 h-8 flex items-center justify-center rounded-full
+                     text-[var(--input-text-color)] transition-transform duration-150
+                     hover:bg-[var(--hover-color)] active:scale-90 hover:cursor-pointer"
+          >
+            {isRecording ? <MicOff size={24} className="text-red-500" /> : <Mic size={24} />}
+          </button>
+          <button
+            type="submit"
+            aria-label="submit-button"
+            className="
+              w-8 h-8 flex items-center justify-center
+              text-[var(--input-text-color)] transition-transform duration-150
+              hover:scale-115 hover:cursor-pointer active:scale-90  rounded-full"
+          >
+            <CircleArrowUp size={32} />
+          </button>
+        </div>
       </fieldset>
     </form>
   );

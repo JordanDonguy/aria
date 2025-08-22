@@ -57,6 +57,17 @@ input:focus {
   outline: none;
 }
 
+/* Remove autocomplete background color on inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--input-color) inset !important;
+  box-shadow: 0 0 0 1000px var(--input-color) inset !important;
+  /* prevent flashing */
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 li p {
   display: inline;
 }
@@ -70,7 +81,7 @@ pre {
   word-break: break-word;
   box-sizing: border-box;
   width: 95%;
-  margin: 1rem auto;
+  margin: 1rem auto 1.5rem;
 }
 
 pre>code {
@@ -82,6 +93,21 @@ pre>code {
 
 article p {
   margin: .25rem 0px;
+}
+
+h3 {
+  font-size: 1.8rem;
+  margin: 1rem 0px;
+}
+
+h4 {
+  font-size: 1.5rem;
+  margin: 1rem 0px;
+}
+
+hr {
+  margin: 2rem 0px;
+  color: var(--chat-msg-color)
 }
 
 .header-transition {
@@ -97,4 +123,25 @@ article p {
   /* IE and Edge */
   scrollbar-width: none;
   /* Firefox */
+}
+
+/* Loading spinner animation */
+.spinner {
+  position: fixed;
+  width: 140px;
+  height: 140px;
+  border: 8px solid #b1b1b1;
+  border-top: 8px solid var(--input-shadow);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }

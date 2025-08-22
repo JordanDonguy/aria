@@ -17,6 +17,9 @@ export default function Home() {
   const [isLogin, setIsLogin] = useState<string | null>(null);
   const [isDelete, setIsDelete] = useState<string | null>(null);
 
+  // Define a padding bottom state to auto adjust padding bottom based on userInput textarea heigh
+  const [paddingBottom, setPaddingBottom] = useState<number>(0);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -63,24 +66,28 @@ export default function Home() {
           Hi, I&apos;m Aria 👋,<br /> Ask me anything 🙂
         </p>
       ) : (
-        <section className="max-w-2xl h-full flex flex-col items-center gap-12 pb-32 pt-8 w-full flex-1 md:ml-20 ml-0 lg:ml-0 mt-16 lg:mt-0">
-          {messages.map((message, index) => {
-            if (message.role === "user") {
-              return <UserMessage key={`${message.role}-${index}`} content={message.content} />;
-            } else if (message.role === "assistant") {
-              if (index === messages.length - 1 && message.content.trim() === "") {
-                return <LoadingAnimation key={index} />;
-              } else {
-                const isLast = index === messages.length - 1;
-                return <AssistantMessage key={`${message.role}-${index}`} content={message.content} isLast={isLast} />;
-              }
-            } else {
-              return null;
-            }
-          })}
-        </section>
-      )}
-      <UserInput />
-    </div>
+        <section
+          style={{ paddingBottom: `${paddingBottom}px` }}
+          className="max-w-2xl h-full flex flex-col items-center gap-12 mb-32 pt-8 w-full flex-1 md:ml-20 ml-0 lg:ml-0 mt-16 lg:mt-0"
+        >
+      {messages.map((message, index) => {
+        if (message.role === "user") {
+          return <UserMessage key={`${message.role}-${index}`} content={message.content} />;
+        } else if (message.role === "assistant") {
+          if (index === messages.length - 1 && message.content.trim() === "") {
+            return <LoadingAnimation key={index} />;
+          } else {
+            const isLast = index === messages.length - 1;
+            return <AssistantMessage key={`${message.role}-${index}`} content={message.content} isLast={isLast} />;
+          }
+        } else {
+          return null;
+        }
+      })}
+    </section>
+  )
+}
+<UserInput setPaddingBottom={setPaddingBottom} />
+    </div >
   );
 }

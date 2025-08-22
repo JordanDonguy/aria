@@ -11,7 +11,7 @@ export function middleware(req: NextRequest) {
 
   const rateLimitResponse = rateLimiter(req, {
     bucketMap: globalBuckets,
-    limit: 20,
+    limit: 25,
   });
   if (rateLimitResponse) return rateLimitResponse;
 

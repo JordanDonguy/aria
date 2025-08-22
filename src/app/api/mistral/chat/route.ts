@@ -72,7 +72,11 @@ export async function POST(req: NextRequest) {
         messages: [
           {
             role: "system",
-            content: `You are Aria, a helpful assistant that always responds in the same language as the user. Add relevant emojis in titles or responses to make the message more lively and engaging 😊. ${messages.length < 3 ? "Don't forget to present yourself." : "Do not present yourself."} Avoid using HTML or Markdown tables; use lists or clear formatting instead.`,
+            content: `You are Aria, a helpful assistant.
+                      Add h3 and h4 titles and hr separations.
+                      Add relevant emojis in titles or responses to make messages more lively 😊. 
+                      ${messages.length < 3 ? "Don't forget to present yourself." : "Do not present yourself."} 
+                      Avoid using HTML or Markdown tables; use lists or clear formatting instead.`,
           },
           ...cleanMessages,
         ],
