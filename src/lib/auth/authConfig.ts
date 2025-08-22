@@ -102,86 +102,71 @@ const authConfig: NextAuthOptions = {
           return true
         }
 
-        // Block if account exists but user is not already signed in (to avoid hijacking)
+        // Redirect to Google linking page if logging with Google on a credentials only account
         if (
           !existingUser.providers.includes("Google") &&
           existingUser.providers.includes("Credentials")
         ) {
-          const now = new Date();
-          const linkingDate = existingUser.google_linking
-            ? new Date(existingUser.google_linking)
-            : null;
+          const { error: updateError } = await supabase
+            .from("users")
+            .update({
+              google_linking: new Date(),
+            })
+            .eq("id", existingUser.id);
 
-          // If user recently initiated linking (within 60s), allow and update providers
-          if (linkingDate && (now.getTime() - linkingDate.getTime()) / 1000 < 60) {
-            const updatedProviders = [...existingUser.providers, "Google"];
-
-            const { error: updateError } = await supabase
-              .from("users")
-              .update({
-                providers: updatedProviders,
-                google_linking: null, // Clear the flag after use
-              })
-              .eq("id", existingUser.id);
-
-            if (updateError) {
-              console.error("Failed to update providers after linking:", updateError);
-              return false;
-            }
-            return true;
+          if (updateError) {
+            console.error("Failed to update providers after linking:", updateError);
+            return false;
           }
-          // Otherwise block Google sign-in
-          throw new Error("An account with this email already exists. Please sign in with your password and link Google account from your profile.");
-        }
-
-        return true;            // allow Google sign-in if no problem
-      }
-      return true               // Allow sign-in for other providers (e.g. credentials)
-    },
-
-    // Customize session object returned to client
-    async session({ session }) {
-      if (session.user?.email) {
-        // Fetch the custom user ID from Supabase using the email
-        const { data, error } = await supabase
-          .from("users")
-          .select("id, providers")
-          .eq("email", session.user.email)
-          .single();
-
-        if (!error && data) {
-          session.user.id = data.id;
-          session.user.providers = data.providers;
+          return "/auth/link-google";
         }
       }
-      return session;
-    },
-
-    // Customize JWT token payload
-    async jwt({ token, user }) {
-      // On first sign-in, persist user ID in JWT token 'sub' field
-      if (user) {
-        token.sub = user.id;
-      }
-      return token;
-    },
-
-    // After Google linking, redirect to profile page with success flag
-    async redirect({ url, baseUrl }) {
-      // Allow absolute URLs within same origin
-      if (url.startsWith(baseUrl)) {
-        return url;
-      }
-
-      // Allow relative URLs
-      if (url.startsWith("/")) {
-        return `${baseUrl}${url}`;
-      }
-
-      // Otherwise fallback to base
-      return baseUrl;
-    }
+      return true    // Allow sign-in otherwise and for other providers
   },
+
+  // Customize session object returned to client
+  async session({ session }) {
+    if (session.user?.email) {
+      // Fetch the custom user ID from Supabase using the email
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, providers")
+        .eq("email", session.user.email)
+        .single();
+
+      if (!error && data) {
+        session.user.id = data.id;
+        session.user.providers = data.providers;
+      }
+    }
+    return session;
+  },
+
+  // Customize JWT token payload
+  async jwt({ token, user }) {
+    // On first sign-in, persist user ID in JWT token 'sub' field
+    if (user) {
+      token.sub = user.id;
+    }
+    return token;
+  },
+
+  // After Google linking, redirect to profile page with success flag
+  async redirect({ url, baseUrl }) {
+    // Allow absolute URLs within same origin
+    if (url.startsWith(baseUrl)) {
+      return url;
+    }
+
+    // Allow relative URLs
+    if (url.startsWith("/")) {
+      return `${baseUrl}${url}`;
+    }
+
+    // Otherwise fallback to base
+    return baseUrl;
+  }
+},
 
   // Use JWT for session management (instead of database sessions)
   session: { strategy: "jwt" },

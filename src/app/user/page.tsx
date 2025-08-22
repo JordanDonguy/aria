@@ -1,6 +1,5 @@
 'use client';
 
-import { signIn } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useSession, signOut } from "next-auth/react";
@@ -10,16 +9,15 @@ export default function UserPage() {
   const [currentPassword, setCurrentPassword] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+
   const [error, setError] = useState<string>("");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);   // To diplay delete account confirmation
+
   const router = useRouter()
   const { data: session, update, status } = useSession();
   const isCredentials = session?.user.providers?.includes("Credentials");   // To display update password or create password
 
-  // State to store linked param locally
-  const [linked, setLinked] = useState<string | null>(null);
-
-  // Redirect if not authenticated and handle linked param + reset delete confirmation on mount
+  // ------ Redirect if not authenticated and handle linked param + reset delete confirmation on mount ------
   useEffect(() => {
     if (status === "loading") return; // Wait until status resolves
 
@@ -28,32 +26,16 @@ export default function UserPage() {
       return;
     }
 
-    // Read linked param once
-    const url = new URL(window.location.href);
-    const linkedParam = url.searchParams.get('linked');
-    if (linkedParam) {
-      setLinked(linkedParam);
-      url.searchParams.delete('linked');
-      window.history.replaceState({}, '', url.toString());
-    }
-
     // Reset delete confirmation button visibility
     setShowDeleteConfirm(false);
   }, [status, router]);
 
-  // Show toast on linked update
-  useEffect(() => {
-    if (linked === "google") {
-      toast.success("Google account successfully linked");
-    }
-  }, [linked]);
-
-  // Prevent displaying deleting confirmation button on mount
+  // ------ Prevent displaying deleting confirmation button on mount ------
   useEffect(() => {
     setShowDeleteConfirm(false)
   }, []);
 
-  // Update user password
+  // ------ Update user password ------
   const updatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     // Check if password are at least 8 characters
@@ -88,7 +70,7 @@ export default function UserPage() {
     toast.success("Your password has been updated");
   };
 
-  // If user doesn't have a password yet (registered with Google)
+  // ------ If user doesn't have a password yet (registered with Google) ------
   const createPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     // Check if password are at least 8 characters
@@ -124,37 +106,12 @@ export default function UserPage() {
     toast.success("Your password has been created");
   };
 
-  // Request Google OAuth signin but with a callback to link-google
-  const handleGoogleButton = async () => {
-    try {
-      // Call API route to mark start of google linking
-      const res = await fetch("/api/auth/google-linking", {
-        method: "POST",
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Failed to start Google linking");
-        return
-      }
-
-      // Proceed with Google sign-in and callback to your linking page
-      await signIn("google", {
-        callbackUrl: "/user?linked=google"
-      });
-    } catch (err) {
-      setError(`Google account linking failed: ${err}`)
-      console.error("Google account linking failed:", err);
-    }
-  };
-
-
-  // Show delete confirmation button
+  // ------ Show delete confirmation button -------
   const toggleDeleteConfirm = () => {
     setShowDeleteConfirm(!showDeleteConfirm)
   };
 
-  // Delete user account and logout
+  // ------ Delete user account and logout ------
   const deleteAccount = async () => {
     setError("");
     const res = await fetch("/api/auth/delete-account", {
@@ -173,9 +130,12 @@ export default function UserPage() {
   return (
     !showDeleteConfirm ? (
       <form onSubmit={isCredentials ? updatePassword : createPassword} className="max-w-xl min-h-[100svh] mx-auto p-2 flex flex-col justify-center gap-6 text-[var(--text-color)] mt-12 md:mt-0">
+
         <h1 className="text-2xl text-center font-bold">User profile</h1>
+
         {/* Display error if any */}
         {error && <p className="text-red-500 text-center">{error}</p>}
+
         {/* Current password input */}
         {isCredentials ? (
           <div className="flex flex-col gap-2">
@@ -191,6 +151,7 @@ export default function UserPage() {
             />
           </div>
         ) : null}
+
         {/* New password input */}
         <div className="flex flex-col gap-2">
           <label htmlFor="new-password">New password:</label>
@@ -204,6 +165,7 @@ export default function UserPage() {
             onChange={(e) => setNewPassword(e.target.value)}
           />
         </div>
+
         {/* Confirm new password input */}
         <div className="flex flex-col gap-2">
           <label htmlFor="confirm-password">Confirm new password:</label>
@@ -217,22 +179,12 @@ export default function UserPage() {
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
         </div>
+
         {/* Submit button */}
         <button type="submit" className="bg-[var(--bg-color)] hover:bg-[var(--user-button-color)] my-4 border hover:cursor-pointer font-semibold rounded-full h-14 flex items-center justify-center">
           {isCredentials ? "Update password" : "Create password"}
         </button>
-        {/* Google OAuth button */}
-        {!session?.user.providers?.includes("Google") ? (
-          <button
-            id="google-btn"
-            type="button"
-            onClick={handleGoogleButton}
-            className="relative flex items-center justify-start h-14 px-4 rounded-full border mb-4 hover:bg-[var(--user-button-color)] hover:cursor-pointer"
-          >
-            <img src="/google-logo.webp" alt="google-logo" className="w-10 h-10 absolute left-4" />
-            <p className="text-base mx-auto">Link Google account</p>
-          </button>
-        ) : null}
+
         {/* Delete account button */}
         <button
           type="button"
@@ -242,6 +194,7 @@ export default function UserPage() {
           Delete account
         </button>
       </form >
+
     ) : (
       <div className="max-w-2xl w-full h-screen flex justify-center items-center mx-auto p-2 md:p-0">
         <div className="w-full md:border flex flex-col gap-8 py-8 px-2 md:px-8 rounded-lg">

@@ -1,32 +1,80 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import authConfig from "@/lib/auth/authConfig";
 import { supabase } from "@/lib/supabase";
+import bcrypt from "bcrypt";
+import sanitizeHtml from "sanitize-html";
+import { loginSchema } from "@/lib/schemas";
 
-export async function POST() {
-  const res = NextResponse;
-
-  // Get session
-  const session = await getServerSession(authConfig);
-
-  if (!session?.user?.email) {
-    return res.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export async function POST(req: Request) {
   try {
-    const { error } = await supabase
-      .from("users")
-      .update({ google_linking: new Date().toISOString() })
-      .eq("email", session.user.email);
+    const body = await req.json();
 
-    if (error) {
-      console.error("Supabase update error:", error);
-      return res.json({ error: "Database update failed" }, { status: 500 });
+    // 1. Validate input with Zod & sanitizeHtml
+    const parsed = loginSchema.safeParse({
+      email: sanitizeHtml(body.email),
+      password: sanitizeHtml(body.password),
+    });
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid email or password." },
+        { status: 400 }
+      );
     }
 
-    return res.json({ message: "Google linking started" }, { status: 200 });
+    const { email, password } = parsed.data;
+
+    // 2. Fetch user from DB
+    const { data: user } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .single();
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found." }, { status: 404 });
+    }
+
+    // 3. Check password
+    const passwordMatches = await bcrypt.compare(password, user.password);
+    if (!passwordMatches) {
+      return NextResponse.json(
+        { error: "Incorrect password." },
+        { status: 401 }
+      );
+    }
+
+    // 4. Check google_linking timestamp
+    const now = new Date();
+    const linkingDate = user.google_linking ? new Date(user.google_linking) : null;
+
+    if (!linkingDate || now.getTime() - linkingDate.getTime() > 10 * 60 * 1000) {
+      return NextResponse.json(
+        { error: "For security, Google linking requests expire after 10 minutes. Please sign in with Google again to restart the process." },
+        { status: 400 }
+      );
+    }
+
+    // 5. Add Google provider
+    const newProviders = [...(user?.providers || []), "Google"];
+
+    await supabase
+      .from("users")
+      .update({
+        providers: newProviders,
+        google_linking: null,
+      })
+      .eq("email", email)
+      .select();
+
+    return NextResponse.json(
+      { message: "Google account linked successfully" },
+      { status: 200 }
+    );
   } catch (err) {
-    console.error("Unexpected error:", err);
-    return res.json({ error: "Internal server error" }, { status: 500 });
+    console.error("Error linking Google account:", err);
+    return NextResponse.json(
+      { error: "Internal server error." },
+      { status: 500 }
+    );
   }
 }
