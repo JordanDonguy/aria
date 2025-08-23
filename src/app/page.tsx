@@ -41,10 +41,12 @@ export default function Home() {
     }
   }, [isDelete, isLogin]);
 
+  // Auto scroll down when new messages are added to chat
   useEffect(() => {
     scrollDown();
   }, [messages.length]);
 
+  // Set document.title when changing cconversation
   useEffect(() => {
     if (conversationId && conversations.length) {
       const currentConversation = conversations.find(

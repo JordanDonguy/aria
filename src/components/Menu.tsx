@@ -6,9 +6,8 @@ import TitleLogo from "./TitleLogo";
 import { useState, useEffect } from "react";
 import { Sun, Moon, User, MessageCircle, LogOut, CircleX } from "lucide-react";
 import { useTheme } from "next-themes";
-import { usePathname } from 'next/navigation';
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import scrollDown from "@/lib/utils/scrollDown";
 import Link from 'next/link';
 import { deleteConversation } from "@/lib/utils/conversationsUtils";
@@ -65,7 +64,6 @@ function Menu() {
     return () => clearTimeout(timeout);
   }, [showMenu]);
 
-
   // Fetch conversations on mount if user's logged-in
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -84,7 +82,24 @@ function Menu() {
       }
     };
     fetchConversations();
-  }, [status, setConversations, setError])
+  }, [status, setConversations, setError]);
+
+  // Display a skeleton menu while loading next auth status
+  if (status === "loading") {
+    return (
+      <header className="fixed z-30 top-0 left-0 md:p-4 px-2 md:min-h-screen justify-between md:justify-start
+        shrink-0 bg-[var(--menu-color)] flex md:flex-col md:h-full h-[70px] items-center
+        md:items-start gap-10 header-transition w-full md:[width:calc(40px+2rem)]">
+        <div className="h-5 w-6 rounded bg-[var(--input-text-color)] animate-ping mt-2 md:ml-2 hidden md:block" />
+        <div className="h-5 w-6 rounded bg-[var(--input-text-color)] animate-ping md:ml-2 hidden md:block" />
+        <div className="absolute pt-[2px] left-1/2 -translate-x-1/2 md:hidden">
+          <TitleLogo />
+        </div>
+        <div className="h-5 w-6 rounded bg-[var(--input-text-color)] animate-ping ml-2" />
+        <div className="h-5 w-6 rounded bg-[var(--input-text-color)] animate-ping md:ml-2 mr-2 md:mr-0" />
+      </header>
+    );
+  }
 
   return (
     <header
@@ -241,15 +256,20 @@ function Menu() {
             >
               {/* Conversation select buttons */}
               <button
-                onClick={() => fetchMessages(
-                  conversation.id,
-                  setConversationId,
-                  setMessages,
-                  setError,
-                  setShowMenu,
-                  router,
-                  scrollDown,
-                )}
+                onClick={() => {
+                  if (pathname !== "/") {
+                    router.push("/");
+                  };
+
+                  fetchMessages(
+                    conversation.id,
+                    setConversationId,
+                    setMessages,
+                    setError,
+                    setShowMenu,
+                    scrollDown,
+                  )
+                }}
                 className={`${conversation.id === conversationId ? "bg-[var(--hover-color)]" : "bg-[var(--bg-color)]"} px-4 py-4 rounded-xl duration-100 
               w-full text-left whitespace-nowrap overflow-hidden text-ellipsis 
               hover:cursor-pointer hover:bg-[var(--hover-color)]`}

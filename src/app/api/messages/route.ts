@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("messages")
-    .select("*")
+    .select("role, content")
     .eq("conversation_id", conversation_id)
     .order("created_at", { ascending: true }); // ascending for chat flow
 
