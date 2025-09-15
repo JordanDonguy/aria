@@ -44,11 +44,11 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "mistral-small-latest",
+        model: "mistral-medium-latest",
         messages: [
           {
             role: 'system',
-            content: `You are a title generator. Your job is to produce a clear, concise, and relevant title summarizing the user's message. Output only the title, with no punctuation or introductions. Use the same language as the message.`,
+            content: `You are a title generator. Your job is to produce a clear, concise, short (max 50 characters), and relevant title summarizing the user's message. Output only the title, with no punctuation or introductions. Use the same language as the message.`,
           },
           {
             role: 'user',

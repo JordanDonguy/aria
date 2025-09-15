@@ -48,7 +48,7 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
 
     // Save form input in a variable and reset before reseting it
     const userContent = validatedData.data.message;
-    
+
     // Reset textarea height & main display padding bottom
     setInput("");
     const textarea = document.getElementById("text-input") as HTMLTextAreaElement | null;
@@ -70,6 +70,16 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: updatedMessages }),
       });
+
+      if (res.status === 429) {
+        // Show user-friendly message
+        setError(`Looks like our AI is saturated... 😰\nPlease try again later 🙏`);
+        // Put the user message back in input text
+        setInput(userContent);
+        // Remove the last two messages from state
+        setMessages((prev) => prev.slice(0, -2));
+        return; // Stop further execution
+      }
 
       if (!res.ok) {
         const errorData = await res.json();

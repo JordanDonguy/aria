@@ -62,7 +62,7 @@ export default function Home() {
     <div className="flex justify-center min-h-[85vh] w-full px-2 md:px-0">
       {/* Render either error message, welcome message, or chat messages */}
       {error ? (
-        <p className="text-2xl text-center w-full self-center">{error}</p>
+        <p className="text-2xl text-center w-full self-center" style={{ whiteSpace: "pre-wrap" }}>{error}</p>
       ) : messages.length < 2 ? (
         <p className="text-3xl/16 text-center self-center mt-12 md:mt-0">
           Hi, I&apos;m Aria 👋,<br /> Ask me anything 🙂

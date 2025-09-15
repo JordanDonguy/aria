@@ -16,5 +16,6 @@ export async function askConversationTitle(message: string) {
     return title;
   } catch (error) {
     console.error("Error calling Mistral API:", error);
+    return "New Conversation"   // Fallback title
   }
 }
