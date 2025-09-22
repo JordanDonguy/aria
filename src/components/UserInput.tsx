@@ -32,6 +32,11 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+
+    // Wait one frame to ensure the latest input is flushed
+    await new Promise(requestAnimationFrame);
+
+    // Return if input's empty
     if (!input.trim()) return;
 
     // Blur the active element (input) immediately on submit to close mobile keyboard
@@ -55,14 +60,18 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
     if (textarea) textarea.style.height = "auto"; // shrink back to initial
     setPaddingBottom(0);
 
+    // Build updatedMessages for Mistral without empty content
+    const updatedMessages = [
+      ...messages.filter(msg => msg.role !== "assistant" || msg.content.trim() !== ""),
+      { role: "user", content: userContent }
+    ];
+
     // Add the user message first
     addMessage("user", userContent);
 
     // Add an empty assistant message as a placeholder
-    addMessage("assistant", "");
+    addMessage("assistant", " ");
 
-    // Updated messages including the new user input
-    const updatedMessages = [...messages, { role: "user", content: userContent }];
 
     try {
       const res = await fetch("/api/mistral/chat", {

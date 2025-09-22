@@ -7,6 +7,10 @@ export async function askConversationTitle(message: string) {
       body: JSON.stringify({ message: message }),
     });
 
+    if (res.status === 429) {
+      return "New conversation"   // Fallback title
+    }
+
     if (!res.body) {
       throw new Error("No response body");
     }
@@ -16,6 +20,6 @@ export async function askConversationTitle(message: string) {
     return title;
   } catch (error) {
     console.error("Error calling Mistral API:", error);
-    return "New Conversation"   // Fallback title
+    return "New conversation"   // Fallback title
   }
 }
