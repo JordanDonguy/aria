@@ -42,6 +42,7 @@ export async function fetchMessages(
   setError: React.Dispatch<React.SetStateAction<string | null>>,
   setShowMenu: React.Dispatch<React.SetStateAction<boolean>>,
   scrollDown: () => void,
+  setIsloading: React.Dispatch<React.SetStateAction<boolean>>,
 ) {
   try {
     if (window.innerWidth < 768) {
@@ -63,6 +64,8 @@ export async function fetchMessages(
     const data = await res.json();
     setMessages(data);
     setConversationId(conversation_id);
+
+    setIsloading(false);
 
     setTimeout(() => {
       scrollDown();

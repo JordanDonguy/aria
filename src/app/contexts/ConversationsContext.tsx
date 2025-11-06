@@ -27,6 +27,8 @@ interface ConversationsContextType {
   updateLastMessage: (content: string) => void;
   error: string | null;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
+  isLoading: boolean;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const ConversationsContext = createContext<ConversationsContextType | undefined>(undefined);
@@ -36,6 +38,7 @@ export const ConversationsProvider = ({ children }: { children: ReactNode }) => 
   const [conversationId, setConversationId] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const addConversation = (id: string, title: string) => {
     const newConversation: Conversation = {
@@ -92,7 +95,9 @@ export const ConversationsProvider = ({ children }: { children: ReactNode }) => 
         addMessage,
         updateLastMessage,
         error,
-        setError
+        setError,
+        isLoading,
+        setIsLoading,
       }}>
       {children}
     </ConversationsContext.Provider>

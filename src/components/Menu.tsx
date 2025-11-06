@@ -4,7 +4,7 @@
 import { useConversations } from "@/app/contexts/ConversationsContext";
 import TitleLogo from "./TitleLogo";
 import { useState, useEffect } from "react";
-import { Sun, Moon, User, MessageCircle, LogOut, CircleX } from "lucide-react";
+import { Sun, Moon, LogOut, CircleX } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
@@ -20,7 +20,7 @@ function Menu() {
   const [displayElement, setDisplayElement] = useState<boolean>(false)  // To display or not element (opacity, scale, etc...)
 
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { setMessages, conversations, setConversations, conversationId, setConversationId, setError } = useConversations();
+  const { setMessages, conversations, setConversations, conversationId, setConversationId, setError, setIsLoading } = useConversations();
 
   const { status } = useSession();
   const isLoggedIn = status === "authenticated";
@@ -227,6 +227,8 @@ function Menu() {
               {/* Conversation select buttons */}
               <button
                 onClick={() => {
+                  setIsLoading(true);
+
                   if (pathname !== "/") {
                     router.push("/");
                   };
@@ -238,6 +240,7 @@ function Menu() {
                     setError,
                     setShowMenu,
                     scrollDown,
+                    setIsLoading,
                   )
                 }}
                 className={`${conversation.id === conversationId ? "bg-[var(--hover-color)]" : "bg-[var(--bg-color)]"} px-4 py-4 rounded-xl duration-100 
