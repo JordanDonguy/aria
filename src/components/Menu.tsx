@@ -9,9 +9,9 @@ import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import scrollDown from "@/lib/utils/scrollDown";
-import Link from 'next/link';
 import { deleteConversation } from "@/lib/utils/conversationsUtils";
 import { fetchMessages } from "@/lib/utils/messagesUtils";
+import NavButton from "./NavButton";
 
 function Menu() {
   const [mounted, setMounted] = useState<boolean>(false);               // To wait for component to be mounted to display some elements
@@ -84,23 +84,6 @@ function Menu() {
     fetchConversations();
   }, [status, setConversations, setError]);
 
-  // Display a skeleton menu while loading next auth status
-  if (status === "loading") {
-    return (
-      <header className="fixed z-30 top-0 left-0 md:p-4 px-2 md:min-h-screen justify-between md:justify-start
-        shrink-0 bg-[var(--menu-color)] flex md:flex-col md:h-full h-[70px] items-center
-        md:items-start gap-10 header-transition w-full md:[width:calc(40px+2rem)]">
-        <div className="h-5 w-6 rounded bg-[var(--input-text-color)] animate-ping mt-2 md:ml-2 hidden md:block" />
-        <div className="h-5 w-6 rounded bg-[var(--input-text-color)] animate-ping md:ml-2 hidden md:block" />
-        <div className="absolute pt-[2px] left-1/2 -translate-x-1/2 md:hidden">
-          <TitleLogo />
-        </div>
-        <div className="h-5 w-6 rounded bg-[var(--input-text-color)] animate-ping ml-2" />
-        <div className="h-5 w-6 rounded bg-[var(--input-text-color)] animate-ping md:ml-2 mr-2 md:mr-0" />
-      </header>
-    );
-  }
-
   return (
     <header
       className={`fixed z-30 top-0 left-0 md:p-4 px-2 md:min-h-screen
@@ -117,7 +100,7 @@ function Menu() {
 
         {/* ----------- Menu button ----------- */}
         <button
-          className="flex items-center text-[var(--text-color)] relative hover:cursor-pointer group"
+          className={`${status === "loading" ? "opacity-0 sm:opacity-100" : "opacity-100"} relative flex items-center text-[var(--text-color)] hover:cursor-pointer group`}
           onClick={() => setShowMenu(!showMenu)}
         >
           <img
@@ -179,34 +162,21 @@ function Menu() {
         </p>
       </button>
 
-      {/* ----------- Login / Back to chat button ----------- */}
-      <Link
-        href={isAuthPage ? "/" : (isLoggedIn ? "/user" : "/auth/login")}
-        onClick={() => window.innerWidth < 768 ? setShowMenu(false) : null}
-        className={`flex items-center text-[var(--text-color)] 
-          relative hover:cursor-pointer group duration-300 ease 
-          ${hideElement ? "hidden md:block" : ""}
-          ${displayElement ? "opacity-100" : "opacity-0 md:opacity-100"} 
-          ${!mounted ? "hidden" : ""}`}
-      >
-        {isAuthPage ? (
-          <MessageCircle
-            size={40}
-            className={`duration-150 group-hover:scale-115 active:scale-90`}
-          />
-        ) : (
-          <User
-            size={40}
-            className={`duration-150 group-hover:scale-115 active:scale-90`}
-          />
-        )}
-        <p className={`md:duration-400 text-start text-xl w-36 mx-4 md:origin-left 
-          ${hideElement ? "hidden " : ""} 
-          ${displayElement ? "md:opacity-100" : "md:opacity-0 md:scale-x-0 md:mr-0"}`}
-        >
-          {isAuthPage ? "Back to chat" : isLoggedIn ? "User profile" : "Login"}
-        </p>
-      </Link>
+      {/* ----------- Login / User / Back to chat buttons ----------- */}
+      {status === "loading" ? (
+        <div className="absolute top-4 left-3 sm:top-0 sm:left-0 sm:relative sm:flex items-center justify-center shrink-0">
+          <div className="h-10 w-10 rounded-full border-4 border-[var(--input-text-color)] border-t-[var(--menu-color)] animate-spin"></div>
+        </div>
+      ) : (
+        <NavButton
+          isAuthPage={isAuthPage}
+          isLoggedIn={isLoggedIn}
+          hideElement={hideElement}
+          displayElement={displayElement}
+          mounted={mounted}
+          setShowMenu={setShowMenu}
+        />
+      )}
 
       {/* ----------- Logout button ----------- */}
       {isLoggedIn ? (
