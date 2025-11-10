@@ -12,14 +12,14 @@ interface Message {
 const apiKey = process.env.MISTRAL_API_KEY;
 
 export async function POST(req: NextRequest) {
-  // Apply rate limiter with AI bucket & limit 5 per minute
+  // 1. Apply rate limiter with AI bucket & limit 5 per minute
   const rateLimitResponse = rateLimiter(req, {
     bucketMap: aiBuckets,
     limit: 5,
   });
   if (rateLimitResponse) return rateLimitResponse;
 
-  // Check if under daily limit and update it
+  // 2. Check if under daily limit and update it
   const daily = await checkAndUpdateDailyLimit();
   if (!daily.allowed) {
     const retryAfter = daily.retryAfter ?? 3600; // fallback to 1 hour (in seconds)
@@ -36,15 +36,19 @@ export async function POST(req: NextRequest) {
     )
   };
 
-  // Make API call
   try {
+    // 3. API key check
     if (!apiKey) {
       return NextResponse.json({ error: "API key not configured" }, { status: 500 });
     }
 
-    const { messages } = await req.json() as { messages: Message[] };
+    // 4. Parse client request
+    const { messages, model } = await req.json() as {
+      messages: Message[],
+      model: "small" | "medium" | "large"
+    };
 
-    // Sanitize input
+    // 5. Sanitize user messages
     const cleanMessages = messages.map((msg) =>
       msg.role === "user"
         ? {
@@ -61,6 +65,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid messages format" }, { status: 400 });
     }
 
+    // 6. Send request to Mistral API
     const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -68,7 +73,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "mistral-small-latest",
+        model: `mistral-${model}-latest`,
         messages: [
           {
             role: "system",
@@ -80,11 +85,12 @@ export async function POST(req: NextRequest) {
           },
           ...cleanMessages,
         ],
-        max_tokens: 2000,
+        max_tokens: 4000,
         stream: true,
       }),
     });
 
+    // 7. Handle Mistral API errors
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Mistral API error response:", errorText);
@@ -99,11 +105,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No response body from Mistral" }, { status: 500 });
     }
 
-    return new Response(body, {
+    // 8. Wrap Mistral response in a readable stream
+    const readable = new ReadableStream({
+      async start(controller) {
+        const reader = body.getReader();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          controller.enqueue(value); // forward chunk immediately
+        }
+
+        controller.close();
+      }
+    });
+
+    // 9. Return streaming response to client
+    return new Response(readable, {
       headers: {
         "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
       },
     });
+
   } catch (error) {
     console.error("Failed to send message to Mistral:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

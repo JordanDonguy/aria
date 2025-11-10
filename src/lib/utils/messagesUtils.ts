@@ -45,6 +45,8 @@ export async function fetchMessages(
   setIsloading: React.Dispatch<React.SetStateAction<boolean>>,
 ) {
   try {
+    setError("");
+
     if (window.innerWidth < 768) {
       setShowMenu(false);
     }

@@ -10,6 +10,7 @@ import { chatInputSchema } from "@/lib/schemas";
 import { postConversation } from "@/lib/utils/conversationsUtils";
 import { postMessages } from "@/lib/utils/messagesUtils";
 import { useSession } from "next-auth/react";
+import ModelSelect from "./ModelSelect";
 
 interface UserInputProps {
   setPaddingBottom: React.Dispatch<React.SetStateAction<number>>
@@ -24,7 +25,9 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
     conversationId,
     setConversationId,
     addConversation,
-    setError
+    setError,
+    aiModel,
+    setAiModel
   } = useConversations();
   const [input, setInput] = useState<string>("");
   const { status } = useSession();
@@ -77,7 +80,7 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
       const res = await fetch("/api/mistral/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages }),
+        body: JSON.stringify({ messages: updatedMessages, model: aiModel }),
       });
 
       if (res.status === 429) {
@@ -162,6 +165,8 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
         transition-[margin] duration-500 ease-in-out"
     >
       <fieldset className="flex flex-col gap-2 justify-between p-4 w-full ">
+
+        {/* -------- Text input -------- */}
         <textarea
           id="text-input"
           name="text-input"
@@ -191,27 +196,35 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
           rows={1}
         />
 
-        <div className="flex justify-between">
-          <button
-            type="button"
-            aria-label="mic-button"
-            onClick={toggleRecording}
-            className="w-8 h-8 flex items-center justify-center rounded-full
-                     text-[var(--input-text-color)] transition-transform duration-150
-                     hover:bg-[var(--hover-color)] active:scale-90 hover:cursor-pointer"
-          >
-            {isRecording ? <MicOff size={24} className="text-red-500" /> : <Mic size={24} />}
-          </button>
-          <button
-            type="submit"
-            aria-label="submit-button"
-            className="
-              w-8 h-8 flex items-center justify-center
-              text-[var(--input-text-color)] transition-transform duration-150
-              hover:scale-115 hover:cursor-pointer active:scale-90  rounded-full"
-          >
-            <CircleArrowUp size={32} />
-          </button>
+        <div className="flex justify-between pl-1 pt-1">
+          {/* -------- AI model select modal -------- */}
+          <ModelSelect aiModel={aiModel} setAiModel={setAiModel} />
+
+          <div className="flex gap-2">
+            {/* -------- Voice input button -------- */}
+            <button
+              type="button"
+              aria-label="mic-button"
+              onClick={toggleRecording}
+              className="w-8 h-8 flex items-center justify-center rounded-full
+                       text-[var(--text-color)] transition-transform duration-150
+                       hover:bg-[var(--hover-color)] active:scale-90 hover:cursor-pointer"
+            >
+              {isRecording ? <MicOff size={24} className="text-red-500" /> : <Mic size={24} />}
+            </button>
+
+            {/* -------- Submit button -------- */}
+            <button
+              type="submit"
+              aria-label="submit-button"
+              className="
+                w-8 h-8 flex items-center justify-center
+                text-[var(--text-color)] transition-transform duration-150
+                hover:scale-115 hover:cursor-pointer active:scale-90  rounded-full"
+            >
+              <CircleArrowUp size={32} />
+            </button>
+          </div>
         </div>
       </fieldset>
     </form>
