@@ -12,7 +12,7 @@
   --hover-color: #b8b8b8;
   --code-color: rgb(214, 211, 221);
   --user-button-color: rgb(206, 206, 206);
-  --ai-button-color: #ebebeb;
+  --button-color: #ebebeb;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,7 +28,7 @@
     --hover-color: #494949;
     --code-color: #2c2a30;
     --user-button-color: rgb(34, 34, 34);
-    --ai-button-color: #1c1c1c;
+    --button-color: #1c1c1c;
   }
 }
 

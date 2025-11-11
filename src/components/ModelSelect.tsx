@@ -29,7 +29,7 @@ export default function ModelSelect({ aiModel, setAiModel }: ModelSelectProps) {
         type="button"
         onClick={() => setIsOpen(true)}
         className="flex items-center gap-2 px-2 rounded-xl hover:cursor-pointer hover:bg-[var(--hover-color)]
-        bg-[var(--ai-button-color)] text-[var(--text-color)]"
+        bg-[var(--button-color)] text-[var(--text-color)]"
       >
         {selected?.icon}
         {selected?.label}

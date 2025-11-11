@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { createSpeechRecognition } from "@/lib/utils/speechRecognition";
-import { CircleArrowUp, Mic, MicOff } from "lucide-react";
+import { ArrowUp, Mic, MicOff } from "lucide-react";
 import { useConversations } from "@/app/contexts/ConversationsContext";
 import { decodeStream } from "@/lib/utils/decodeStram";
 import { askConversationTitle } from "@/lib/utils/askConversationTitle";
@@ -214,7 +214,7 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
               type="button"
               aria-label="mic-button"
               onClick={toggleRecording}
-              className="w-8 h-8 flex items-center justify-center rounded-full
+              className="w-10 h-10 p-2 flex items-center justify-center rounded-full bg-[var(--button-color)]
                        text-[var(--text-color)] transition-transform duration-150
                        hover:bg-[var(--hover-color)] active:scale-90 hover:cursor-pointer"
             >
@@ -226,11 +226,11 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
               type="submit"
               aria-label="submit-button"
               className="
-                w-8 h-8 flex items-center justify-center
+                w-10 h-10 p-2 flex items-center justify-center bg-[var(--button-color)]
                 text-[var(--text-color)] transition-transform duration-150
-                hover:scale-115 hover:cursor-pointer active:scale-90  rounded-full"
+                hover:bg-[var(--hover-color)] hover:cursor-pointer active:scale-90  rounded-full"
             >
-              <CircleArrowUp size={32} />
+              <ArrowUp size={32} />
             </button>
           </div>
         </div>

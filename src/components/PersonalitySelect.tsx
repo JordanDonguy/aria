@@ -30,7 +30,7 @@ export default function PersonalitySelect({ personality, setPersonality }: Perso
         type="button"
         onClick={() => setIsOpen(true)}
         className="flex items-center gap-2 px-2 rounded-xl hover:cursor-pointer hover:bg-[var(--hover-color)]
-        bg-[var(--ai-button-color)] text-[var(--text-color)]"
+        bg-[var(--button-color)] text-[var(--text-color)]"
       >
         {options.find(o => o.value === personality)?.label}
       </button>
