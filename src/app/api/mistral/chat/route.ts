@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter, aiBuckets } from "@/lib/middlewares/rateLimit";
 import { checkAndUpdateDailyLimit } from "@/lib/dailyLimit/checkUpdateDailyLimit";
 import sanitizeHtml from "sanitize-html";
+import type { Model, Personality } from '@/types/ai';
 
 interface Message {
   role: "user" | "assistant";
@@ -41,11 +42,12 @@ export async function POST(req: NextRequest) {
     if (!apiKey) {
       return NextResponse.json({ error: "API key not configured" }, { status: 500 });
     }
-
+  
     // 4. Parse client request
-    const { messages, model } = await req.json() as {
+    const { messages, model, personality } = await req.json() as {
       messages: Message[],
-      model: "small" | "medium" | "large"
+      model: Model,
+      personality: Personality
     };
 
     // 5. Sanitize user messages
@@ -78,6 +80,7 @@ export async function POST(req: NextRequest) {
           {
             role: "system",
             content: `You are Aria, a helpful assistant.
+                      Your personality is: ${personality}.
                       Add h3 and h4 titles and hr separations.
                       Add relevant emojis in titles or responses to make messages more lively 😊. 
                       ${messages.length < 3 ? "Don't forget to present yourself." : "Do not present yourself."} 

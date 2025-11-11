@@ -1,4 +1,5 @@
-export {};
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export { };
 
 declare global {
   // Minimal SpeechRecognition interface
@@ -28,10 +29,10 @@ declare global {
 
   interface Window {
     SpeechRecognition: {
-      new (): SpeechRecognition;
+      new(): SpeechRecognition;
     };
     webkitSpeechRecognition: {
-      new (): SpeechRecognition;
+      new(): SpeechRecognition;
     };
   }
 }

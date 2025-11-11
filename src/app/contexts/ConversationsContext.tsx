@@ -3,6 +3,7 @@
 
 import { useEffect } from "react";
 import { createContext, useState, useContext, ReactNode } from "react";
+import type { Model, Personality } from "@/types/ai";
 
 export interface Message {
   role: "user" | "assistant";
@@ -29,8 +30,10 @@ interface ConversationsContextType {
   setError: React.Dispatch<React.SetStateAction<string | null>>;
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  aiModel: "small" | "medium";
-  setAiModel: React.Dispatch<React.SetStateAction<"small" | "medium">>;
+  aiModel: Model;
+  setAiModel: React.Dispatch<React.SetStateAction<Model>>;
+  personality: Personality;
+  setPersonality: React.Dispatch<React.SetStateAction<Personality>>;
 }
 
 const ConversationsContext = createContext<ConversationsContextType | undefined>(undefined);
@@ -39,9 +42,14 @@ export const ConversationsProvider = ({ children }: { children: ReactNode }) => 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [conversationId, setConversationId] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
+
+  // Error and loading states
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [aiModel, setAiModel] = useState<"small" | "medium">("small");
+
+  // AI related states (model and personality)
+  const [aiModel, setAiModel] = useState<Model>("small");
+  const [personality, setPersonality] = useState<Personality>("Friendly, cheerful and approachable");
 
   const addConversation = (id: string, title: string) => {
     const newConversation: Conversation = {
@@ -103,6 +111,8 @@ export const ConversationsProvider = ({ children }: { children: ReactNode }) => 
         setIsLoading,
         aiModel,
         setAiModel,
+        personality,
+        setPersonality
       }}>
       {children}
     </ConversationsContext.Provider>

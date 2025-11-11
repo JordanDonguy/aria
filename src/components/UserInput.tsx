@@ -11,6 +11,7 @@ import { postConversation } from "@/lib/utils/conversationsUtils";
 import { postMessages } from "@/lib/utils/messagesUtils";
 import { useSession } from "next-auth/react";
 import ModelSelect from "./ModelSelect";
+import PersonalitySelect from "./PersonalitySelect";
 
 interface UserInputProps {
   setPaddingBottom: React.Dispatch<React.SetStateAction<number>>
@@ -27,10 +28,13 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
     addConversation,
     setError,
     aiModel,
-    setAiModel
+    setAiModel,
+    personality,
+    setPersonality
   } = useConversations();
-  const [input, setInput] = useState<string>("");
+
   const { status } = useSession();
+  const [input, setInput] = useState<string>("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -80,7 +84,7 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
       const res = await fetch("/api/mistral/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages, model: aiModel }),
+        body: JSON.stringify({ messages: updatedMessages, model: aiModel, personality }),
       });
 
       if (res.status === 429) {
@@ -197,8 +201,12 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
         />
 
         <div className="flex justify-between pl-1 pt-1">
-          {/* -------- AI model select modal -------- */}
-          <ModelSelect aiModel={aiModel} setAiModel={setAiModel} />
+          <div className="flex gap-4">
+            {/* -------- AI model select modal -------- */}
+            <ModelSelect aiModel={aiModel} setAiModel={setAiModel} />
+            {/* -------- AI personality select modal -------- */}
+            <PersonalitySelect personality={personality} setPersonality={setPersonality} />
+          </div>
 
           <div className="flex gap-2">
             {/* -------- Voice input button -------- */}
