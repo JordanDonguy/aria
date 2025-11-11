@@ -33,6 +33,7 @@ function Menu() {
   // If user clicks on new chat, reset messages and document.title
   function newChat() {
     setMessages([]);
+    setError("");
     setConversationId("");
     router.push("/");
     if (window.innerWidth < 768) {
@@ -182,7 +183,7 @@ function Menu() {
       {isLoggedIn ? (
         <button
           onClick={(e) => {
-            e.preventDefault(); // important
+            e.preventDefault();
             signOut({ redirect: false });
             router.push("/auth/login?logout=true");
             if (window.innerWidth < 768) {

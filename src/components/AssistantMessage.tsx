@@ -8,7 +8,7 @@ type AssistantMessageProps = {
 function AssistantMessage({ content, isLast = false }: AssistantMessageProps) {
   return (
     <article
-      className={`w-full self-start max-w-screen h-full flex-1
+      className={`w-full self-start max-w-screen h-full flex-1 markdown
         ${isLast ? "min-h-[60vh]" : ""}
       `}
     >

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --bg-color: #F3F3F3;
+  --bg-color: #f5f4f4;
   --text-color: #0F0F0F;
   --menu-color: #D0D0D0;
   --menu-shadow: #9d9d9d;
@@ -12,7 +12,7 @@
   --hover-color: #b8b8b8;
   --code-color: rgb(214, 211, 221);
   --user-button-color: rgb(206, 206, 206);
-  --ai-button-color: #dfdfdf;
+  --ai-button-color: #ebebeb;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,7 +28,7 @@
     --hover-color: #494949;
     --code-color: #2c2a30;
     --user-button-color: rgb(34, 34, 34);
-    --ai-button-color: #1E1E1E;
+    --ai-button-color: #1c1c1c;
   }
 }
 
@@ -40,19 +40,6 @@ html {
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
-}
-
-ul,
-ol {
-  list-style-position: inside;
-  margin: 1rem 0px;
-}
-
-li {
-  text-indent: -1.2rem;
-  padding-left: 1.2rem;
-  list-style-type: disc;
-  margin: .5rem 0px;
 }
 
 input:focus {
@@ -70,11 +57,24 @@ input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s;
 }
 
-li p {
+.markdown li p {
   display: inline;
 }
 
-pre {
+.markdown ul,
+.markdown ol {
+  list-style-position: inside;
+  margin: 1rem 0px;
+}
+
+.markdown li {
+  text-indent: -1.2rem;
+  padding-left: 1.2rem;
+  list-style-type: disc;
+  margin: .5rem 0px;
+}
+
+.markdown pre {
   padding: 1rem;
   background: var(--code-color);
   border-radius: 0.5rem;
@@ -86,24 +86,29 @@ pre {
   margin: 1rem auto 1.5rem;
 }
 
-pre>code {
+.markdown pre>code {
   display: block;
   box-sizing: border-box;
   padding: 0px 1rem;
   font-size: .9rem;
 }
 
-article p {
+.markdown p {
   margin: .25rem 0px;
 }
 
-h3 {
-  font-size: 1.8rem;
+.markdown h2 {
+  font-size: 1.9rem;
+  margin: 1.25rem 0px;
+}
+
+.markdown h3 {
+  font-size: 1.6rem;
   margin: 1rem 0px;
 }
 
-h4 {
-  font-size: 1.5rem;
+.markdown h4 {
+  font-size: 1.3rem;
   margin: 1rem 0px;
 }
 
