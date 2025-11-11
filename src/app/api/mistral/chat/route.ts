@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter, aiBuckets } from "@/lib/middlewares/rateLimit";
 import { checkAndUpdateDailyLimit } from "@/lib/dailyLimit/checkUpdateDailyLimit";
 import sanitizeHtml from "sanitize-html";
-import type { Model, Personality } from '@/types/ai';
+import type { Model, Personality } from '../../../../../types/ai';
 
 interface Message {
   role: "user" | "assistant";

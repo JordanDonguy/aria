@@ -3,7 +3,7 @@
 
 import { useEffect } from "react";
 import { createContext, useState, useContext, ReactNode } from "react";
-import type { Model, Personality } from "@/types/ai";
+import type { Model, Personality } from "../../../types/ai";
 
 export interface Message {
   role: "user" | "assistant";

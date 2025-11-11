@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import { useState } from "react";
-import type { Personality } from "@/types/ai";
+import type { Personality } from "../../types/ai";
 
 type PersonalitySelectProps = {
   personality: Personality;
