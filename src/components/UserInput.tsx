@@ -168,7 +168,7 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
         shadow-sm text-lg md:ml-20 ml-0 lg:ml-0
         transition-[margin] duration-500 ease-in-out"
     >
-      <fieldset className="flex flex-col gap-2 justify-between p-4 w-full ">
+      <fieldset className="flex flex-col gap-2 justify-between py-4 px-2 sm:p-4 w-full ">
 
         {/* -------- Text input -------- */}
         <textarea
@@ -201,7 +201,7 @@ function UserInput({ setPaddingBottom }: UserInputProps) {
         />
 
         <div className="flex justify-between pl-1 pt-1">
-          <div className="flex gap-4">
+          <div className="flex gap-2 sm:gap-4">
             {/* -------- AI model select modal -------- */}
             <ModelSelect aiModel={aiModel} setAiModel={setAiModel} />
             {/* -------- AI personality select modal -------- */}
