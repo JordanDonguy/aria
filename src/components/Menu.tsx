@@ -90,7 +90,7 @@ function Menu() {
       className={`fixed z-30 top-0 left-0 md:p-4 px-2 md:min-h-screen
         shrink-0 bg-[var(--menu-color)] flex flex-col 
         items-start gap-3 header-transition
-        ${showMenu ? "md:w-64 w-full h-screen md:shadow-sm" : "md:[width:calc(40px+2rem)] w-full md:h-full  h-[70px]"}`}
+        ${showMenu ? "md:w-64 w-full h-screen md:shadow-sm" : "md:[width:calc(40px+2rem)] w-full md:h-full h-[70px]"}`}
     >
       {/* ----------- Mobile Logo ----------- */}
       <div className="absolute pt-[18px] left-1/2 -translate-x-1/2 md:hidden">
